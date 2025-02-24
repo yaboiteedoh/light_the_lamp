@@ -22,10 +22,10 @@ A custom fantasy hockey platform
         - ~~allow for importing older apis~~
 
 # 0.3.0
-- build team table class
-    - api
-    - dataclass
-    - test function
+- ~~build team table class~~
+    - ~~api~~
+    - ~~dataclass~~
+    - ~~test function~~
 
 # 0.4.0
 - build player table class
