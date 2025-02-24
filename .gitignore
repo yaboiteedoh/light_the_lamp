@@ -1,3 +1,5 @@
+.venv
 .env
 current_version.json
-.venv
+**/*.db
+**/*.jsonl

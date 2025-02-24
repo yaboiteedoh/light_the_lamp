@@ -113,8 +113,9 @@ A custom fantasy hockey platform
         - team rowid
         - conference
         - division
+        - team location
         - team name
-        - team logo
+        - team abbrev
 
     - player object
         - player rowid (maybe make this nhlid)
