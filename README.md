@@ -11,15 +11,15 @@ A custom fantasy hockey platform
 - ~~git push script~~
 
 # 0.2.0
-- build database handler class
-- initialize database modules
-    - each table has a module with a version labeled python script
-        - table api
-        - associated dataclass
-        - associated testing functions
-    - each table's __init__.py handles version control
-        - default to latest code version
-        - allow for importing older apis
+- ~~build database handler class~~
+- ~~initialize database modules~~
+    - ~~each table has a module with a version labeled python script~~
+        - ~~table api~~
+        - ~~associated dataclass~~
+        - ~~associated testing functions~~
+    - ~~each table's __init__.py handles version control~~
+        - ~~default to latest code version~~
+        - ~~allow for importing older apis~~
 
 # 0.3.0
 - build team table class
