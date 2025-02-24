@@ -4,84 +4,84 @@ A custom fantasy hockey platform
 *Version Roadmap*
 
 # 0.1.0
-    ~~start todo list~~
-    ~~implement version control module~~
-        ~~version dataclass~~
-        ~~version.py~~
-        ~~git push script~~
+~~start todo list~~
+~~implement version control module~~
+~~version dataclass~~
+~~version.py~~
+~~git push script~~
 
 # 0.2.0
-    build database handler class
-    initialize database modules
-    - each table has a module with a version labeled python script
-        - table api
-        - associated dataclass
-        - associated testing functions
-    - each table's __init__.py handles version control
-        - default to latest code version
-        - allow for importing older apis
+build database handler class
+initialize database modules
+- each table has a module with a version labeled python script
+    - table api
+    - associated dataclass
+    - associated testing functions
+- each table's __init__.py handles version control
+    - default to latest code version
+    - allow for importing older apis
 
 # 0.3.0
-    build team table class
-    - api
-    - dataclass
-    - test function
+build team table class
+- api
+- dataclass
+- test function
 
 # 0.4.0
-    build player table class
-    - api
-    - dataclass
-    - test function
- 
+build player table class
+- api
+- dataclass
+- test function
+
 # 0.5.0
-    build game table class
-    - api
-    - dataclass
-    - test function
- 
+build game table class
+- api
+- dataclass
+- test function
+
 # 0.6.0
-    build player stat table class
-    - api
-    - dataclass
-    - test function
- 
+build player stat table class
+- api
+- dataclass
+- test function
+
 # 0.7.0
-    build user table class
-    - api
-    - dataclass
-    - test function
- 
+build user table class
+- api
+- dataclass
+- test function
+
 # 0.8.0
-    build user picks table class
-    - api
-    - dataclass
-    - test function
- 
+build user picks table class
+- api
+- dataclass
+- test function
+
 # 0.9.0
-    build user stats table class
-    - api
-    - dataclass
-    - test function
- 
+build user stats table class
+- api
+- dataclass
+- test function
+
 # 0.10.0
-    build user matchups table class
-    - api
-    - dataclass
-    - test function
+build user matchups table class
+- api
+- dataclass
+- test function
 
 # 0.11.0
-    update database class
-    - plug all the table objects in
-    - build wrapper for test functions with option flags
+update database class
+- plug all the table objects in
+- build wrapper for test functions with option flags
 
 # 0.12.0
-    build logger
-    - handler for database test results
+build logger
+- handler for database test results
 
 # 1.0.0
-    document existing code
-    - move version roadmap
-    - readme to walk through code organization and architecture
+document existing code
+- move version roadmap
+- readme to walk through code organization and architecture
 
 
 *Architecture*

@@ -1,3 +1,4 @@
 {'version': '0.1.0', 'hash': '5df73ebe7579a5973dabe3c06fc4667e8ba8406', 'message': '-Started Todo List -Implemented Version Control Module (version dataclass, version.py, git push script)'}
 {'version': '0.1.1', 'hash': '45a68f1ab4d8bd0a1f4d682367e496ea8bd42b1', 'message': 'removed .venv from the repo'}
 {'version': '0.1.2', 'hash': '2c45d134a0e3b87d1af08282359ca04a035ac81', 'message': 'added .venv to the gitignore'}
+{'version': '0.1.3', 'hash': '92834515c4148f987ffcc81902f273f338bc4d0', 'message': 'recreated .venv'}
