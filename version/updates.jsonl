@@ -1,1 +1,2 @@
 {'version': '0.1.0', 'hash': '5df73ebe7579a5973dabe3c06fc4667e8ba8406', 'message': '-Started Todo List -Implemented Version Control Module (version dataclass, version.py, git push script)'}
+{'version': '0.1.1', 'hash': '45a68f1ab4d8bd0a1f4d682367e496ea8bd42b1', 'message': 'removed .venv from the repo'}
