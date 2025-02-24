@@ -3,3 +3,4 @@
 current_version.json
 **/*.db
 **/*.jsonl
+__pycache__
