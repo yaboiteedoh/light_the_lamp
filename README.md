@@ -4,11 +4,11 @@ A custom fantasy hockey platform
 *Version Roadmap*
 
 # 0.1.0
-~~start todo list~~
-~~implement version control module~~
-~~version dataclass~~
-~~version.py~~
-~~git push script~~
+- ~~start todo list~~
+- ~~implement version control module~~
+    - ~~version dataclass~~
+- ~~version.py~~
+- ~~git push script~~
 
 # 0.2.0
 build database handler class
