@@ -258,7 +258,8 @@ class Team:
 ###############################################################################
 
 
-teams_table = TeamsTable()
+def teams_table(testing=False, results=None):
+    return TeamsTable(testing, results)
 
 
 ###############################################################################
