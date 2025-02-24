@@ -7,13 +7,13 @@ def teams_table(version_number, testing=False, results=None):
     return table(testing, results)
 
 
-def team_object(version_number):
+def team_object(version_number, team_dict):
     version_number = version_number.as_tuple
 
     if version_number >= (0, 3):
         from ._0_3 import Team
 
-    return Team
+    return Team(**team_dict)
 
 
 ###############################################################################

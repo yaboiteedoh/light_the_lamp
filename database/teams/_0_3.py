@@ -49,7 +49,7 @@ class TeamsTable:
         else:
             self.db_dir = str(Path('database', 'testing', 'teams.db'))
             self._test(results)
-
+ 
 
     #------------------------------------------------------# 
 
@@ -64,7 +64,7 @@ class TeamsTable:
                     location TEXT NOT NULL,
                     name TEXT NOT NULL,
                     code TEXT NOT NULL
-                    rowid INTEGER PRIMARY KEY AUTOINCREMENT,
+                    rowid INTEGER PRIMARY KEY AUTOINCREMENT
                 )
             '''
             cur.execute(sql)
@@ -108,6 +108,15 @@ class TeamsTable:
             return cur.fetchall()
 
 
+    def read_by_rowid(self, rowid: int) -> Team:
+        with sqlite3.connect(self.db_dir) as con:
+            cur = con.cursor()
+            cur.row_factory = self._team_row_factory
+            sql = 'SELECT * FROM teams WHERE rowid=?'
+            cur.execute(sql, (rowid,))
+            return cur.fetchone()
+
+
     def read_by_conference(self, conference: str) -> list[Team]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
@@ -124,15 +133,6 @@ class TeamsTable:
             sql = 'SELECT * FROM teams WHERE division=?'
             cur.execute(sql, (division,))
             return cur.fetchall()
-
-
-    def read_by_rowid(self, rowid: int) -> Team:
-        with sqlite3.connect(self.db_dir) as con:
-            cur = con.cursor()
-            cur.row_factory = self._team_row_factory
-            sql = 'SELECT * FROM teams WHERE rowid=?'
-            cur.execute(sql, (rowid,))
-            return cur.fetchone()
 
 
     def read_by_code(self, team_code: str) -> Team:
@@ -155,13 +155,59 @@ class TeamsTable:
 
     def _test(self, results: StringIO) -> None:
         self._reset_table()
-        results.write('testing teams database')
+        results.write('testing teams table')
         
+        test_objects, \
+        conferences, \
+        teams_by_conference, \
+        divisions, \
+        teams_by_division = \
+        self._setup_testing_data(test_data)
+                results.write('\n\ttesting teams.add(), teams.read_all()')
+
+        for obj, team in zip(test_objects, test_data):
+            team['rowid'] = db.add_support_request(obj)
+        
+        db_teams = self.read_all()
+        self._compare_data(results, test_data, db_teams)
+
+        results.write('\n\ttesting teams.read_by_rowid()')
+        for team in test_data:
+            obj_rowid = self.read_by_rowid(team['rowid']).as_dict
+            self._compare_items(team, obj_rowid)
+
+        results.write('\n\ttesting teams.read_by_conference()')
+        for conference in conferences:
+            data_list = teams_by_conference[conference]
+            db_objs = self.read_by_conference(conference)
+            self._compare_data(data_list, db_objs)
+
+        results.write('\n\ttesting teams.read_by_division()')
+        for division in divisions:
+            data_list = teams_by_division[division]
+            db_objs = self.read_by_division(division)
+            self._compare_data(data_list, db_objs)
+
+        results.write('\n\ttesting teams.read_by_code()')
+            obj_code = self.read_by_code(team['code']).as_dict
+            self._compare_items(team, obj_code)
+
+
+    def _reset_table():
+        with sqlite3.connect(self.db_dir) as con:
+            cur = con.cursor()
+            sql = 'DROP TABLE teams'
+            cur.execute(sql)
+
+        self.init_db()
+
+
+    def _setup_testing_data(test_data):
         test_objects = [
             Team(**team)
             for team in test_data
         ]
-        
+
         conferences = {
             team['conference']
             for team in test_data
@@ -180,42 +226,20 @@ class TeamsTable:
             division = team['division']
             teams_by_division[division].append[team]
 
-        results.write('\n\ttesting teams.add(), teams.read_all()')
-        for obj, team in zip(test_objects, test_data):
-            team['rowid'] = db.add_support_request(obj)
-        
-        db_teams = self.read_all()
-        _compare_data(results, test_data, db_teams)
-
-        results.write('\n\ttesting teams.read_by_rowid(), teams.read_by_code()')
-        for team in test_data:
-            obj_rowid = self.read_by_rowid(team['rowid']).as_dict
-            _compare_items(team, obj_rowid)
-            obj_code = self.read_by_code(team['code']).as_dict
-            _compare_items(team, obj_code)
-
-        results.write('\n\ttesting teams.read_by_conference(), teams.read_by_division()')
-        for conference in conferences:
-            data_list = teams_by_conference[conference]
-            db_objs = self.read_by_conference(conference)
-            _compare_data(data_list, db_objs)
-
-        for division in divisions:
-            data_list = teams_by_division[division]
-            db_objs = self.read_by_division(division)
-            _compare_data(data_list, db_objs)
-
-
-    def _reset_table():
-        remove(self.db_dir)
-        self.init_db()
+        return (
+            test_objects,
+            conferences,
+            teams_by_conference,
+            divisions,
+            teams_by_division
+        )
 
 
     def _compare_data(results, data_list, objects_list):
         for i, tup in enumerate(zip(data_list, objects_list)):
             data, obj = tup
             obj = obj.as_dict
-            _compare_items(results, data, obj, i)
+            self._compare_items(results, data, obj, i)
 
 
     def _compare_items(results, data, obj, i=None):

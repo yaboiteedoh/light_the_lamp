@@ -8,3 +8,4 @@
 {'version': '0.2.0', 'hash': '6fe942ad2226b72ffe30627bb8ae650469ebd9f', 'message': '-initialized database modules -initialized database handler'}
 {'version': '0.3.0', 'hash': 'efc8139974192a407e2c49fbddf9d129fe0317f', 'message': '0.3.0 -built teams api -built teams dataclass -built teams test function'}
 {'version': '0.3.1', 'hash': '12d20142c4d926deda1e73bc35d75937f4aa0b4', 'message': 'updated readme'}
+{'version': '0.3.2', 'hash': '262ff96d02d0af279ad861a7dd911238f594001', 'message': 'added __pychache__ to the gitignore'}
