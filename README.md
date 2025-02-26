@@ -28,10 +28,10 @@ A custom fantasy hockey platform
     - ~~test function~~
 
 # 0.4.0
-- build player table class
-    - api
-    - dataclass
-    - test function
+- ~~build player table class~~
+    - ~~api~~
+    - ~~dataclass~~
+    - ~~test function~~
 
 # 0.5.0
 - build game table class

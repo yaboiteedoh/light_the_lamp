@@ -13,3 +13,4 @@
 {'version': '0.3.4', 'hash': '85486f52623838b0d21a628fd6da1580748c0e5', 'message': 'abstracted some of the private functions onto a base SQLiteTable class -generalized row factory -comare items and compare data test functions -Looking for a way to condense test script functions into a test fetchone and test fetchall generic function to keep the table classes cleaner/minimize test function size'}
 {'version': '0.3.5', 'hash': 'ee5f7ca0068035f185cc5f88e978e55e49f6d9b', 'message': 'fixed database __init__()'}
 {'version': '0.3.6', 'hash': '96d8686dbb4d1441a7b708d79d2616e0021482d', 'message': 'moved implementation test functionality to the parent sqlitetable class, with some configurable options per table, for more flexibility'}
+{'version': '0.4.0', 'hash': '94f34f0bb1698f713b6fc03ae03f044c1fa489c', 'message': 'Finished PlayersTable class'}
