@@ -49,8 +49,8 @@ class TeamsTable(SQLiteTable):
         if not testing:
             self.db_dir = str(Path('database', 'data.db'))
         else:
-            self.db_dir = str(Path('database', 'testing', 'teams.db'))
-        self.dataclass = Player
+            self.db_dir = str(Path('database', 'testing', 'data.db'))
+        self.dataclass = Team
 
         self._table_name = 'teams'
         self._group_keys = {

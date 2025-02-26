@@ -45,7 +45,7 @@ class PlayersTable(SQLiteTable):
         if not testing:
             self.db_dir = str(Path('database', 'data.db'))
         else:
-            self.db_dir = str(Path('database', 'testing', 'players.db'))
+            self.db_dir = str(Path('database', 'testing', 'data.db'))
         self.dataclass = Player
 
         self._table_name = 'players'
@@ -71,8 +71,8 @@ class PlayersTable(SQLiteTable):
             cur = con.cursor()
             sql = '''
                 CREATE TABLE players(
-                    nhlid INT NOT NULL,
-                    team_rowid INT NOT NULL,
+                    nhlid INTEGER NOT NULL,
+                    team_rowid INTEGER NOT NULL,
                     status TEXT NOT NULL,
                     name TEXT NOT NULL,
                     rowid INTEGER PRIMARY KEY AUTOINCREMENT
@@ -185,7 +185,7 @@ class Player:
 
 
 def players_table(testing=False, results=None):
-    reaturn PlayersTable(testing, results)
+    return PlayersTable(testing, results)
 
 
 ###############################################################################

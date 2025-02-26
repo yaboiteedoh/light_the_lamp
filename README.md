@@ -133,6 +133,7 @@ A custom fantasy hockey platform
         - home team points
         - away team rowid
         - away team points
+        - last update timestamp
 
     - player stat object
         - stat rowid

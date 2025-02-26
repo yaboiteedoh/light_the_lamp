@@ -21,7 +21,7 @@ class Database:
         params = [version_number, testing]
 
         self.teams = teams_table(*params)
-        # self.players = players_table(*params)
+        self.players = players_table(*params)
         # self.games = games_table(*params)
         # self.player_stats = player_stats_table(*params)
         # self.users = users_table(*params)
@@ -31,7 +31,7 @@ class Database:
 
         self.build_sequence = [
             self.teams,
-            # self.players,
+            self.players,
             # self.games,
             # self.player_stats,
             # self.users,
