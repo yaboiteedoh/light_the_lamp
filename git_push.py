@@ -28,7 +28,12 @@ def main():
         update_type = argv[1].lower()
     except IndexError:
         update_type = input(prompt_text)
-    commit_message = input('Enter Git Commit message:\n')
+
+    if (commit_message := [arg for arg in argv[1:]]) != []:
+        print(commit_message)
+        commit_message = ' '.join(commit_message)
+    else:
+        commit_message = input('Enter Git Commit message:\n')
 
     _update_version_number(update_type, prompt_text)
     _push_to_github(commit_message)
