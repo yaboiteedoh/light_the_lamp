@@ -29,7 +29,7 @@ def main():
     except IndexError:
         update_type = input(prompt_text)
 
-    if (commit_message := [arg for arg in argv[1:]]) != []:
+    if (commit_message := [arg for arg in argv[2:]]) != []:
         print(commit_message)
         commit_message = ' '.join(commit_message)
     else:

@@ -15,3 +15,4 @@
 {'version': '0.3.6', 'hash': '96d8686dbb4d1441a7b708d79d2616e0021482d', 'message': 'moved implementation test functionality to the parent sqlitetable class, with some configurable options per table, for more flexibility'}
 {'version': '0.4.0', 'hash': '94f34f0bb1698f713b6fc03ae03f044c1fa489c', 'message': 'Finished PlayersTable class'}
 {'version': '0.4.1', 'hash': 'ef25de69f64dc2c9a716c03da21ce3e29617b67', 'message': 'updated readme'}
+{'version': '0.4.2', 'hash': '2824194bfe29113cf926b40c9c80bfad2129aee', 'message': '-d test'}
