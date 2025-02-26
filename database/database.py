@@ -16,19 +16,17 @@ from version import VersionNumber
 
 class Database:
     def __init__(self, version_number: VersionNumber, testing=False):
-        if not testing:
-            self.teams = teams_table(version_number)
-            self.players = players_table(version_number)
-            self.games = games_table(version_number)
-            self.player_stats = player_stats_table(version_number)
-            self.users = users_table(version_number)
-            self.user_picks = user_picks_table(version_number)
-            self.user_stats = user_stats_table(version_number)
-            self.user_matchups = user_matchups_table(version_number)
-        else:
-            results = StringIO()
-            _ = teams_table(version_number, testing, results)
-            _ = players_table(version_number, testing, results)
+        results = StringIO() if testing else None
+        params = [version_number, testing, results]
+
+        self.teams = teams_table(*params)
+        self.players = players_table(*params)
+        self.games = games_table(*params)
+        self.player_stats = player_stats_table(*params)
+        self.users = users_table(*params)
+        self.user_picks = user_picks_table(*params)
+        self.user_stats = user_stats_table(*params)
+        self.user_matchups = user_matchups_table(*params)
 
 
 ###############################################################################

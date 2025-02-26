@@ -7,6 +7,7 @@ from dataclasses import dataclass
 class SQLiteTable:
     # override in the child class
     def __init__(self):
+        self.db_dir = 'path'
         self._table_name = 'base'
         self._dataclass = BaseDataClass
 
