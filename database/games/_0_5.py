@@ -20,7 +20,7 @@ class GamesTable(SQLiteTable):
         if not testing:
             self.db_dir = str(Path('database', 'data.db'))
         else:
-            self.db_dir = str(Path('database', 'testing', 'data.db'))
+            self.db_dir = str(Path('database', 'test.db'))
         self.dataclass = Game
 
         self._table_name = 'games'

@@ -49,7 +49,7 @@ class TeamsTable(SQLiteTable):
         if not testing:
             self.db_dir = str(Path('database', 'data.db'))
         else:
-            self.db_dir = str(Path('database', 'testing', 'data.db'))
+            self.db_dir = str(Path('database', 'test.db'))
         self.dataclass = Team
 
         self._table_name = 'teams'
@@ -58,7 +58,7 @@ class TeamsTable(SQLiteTable):
             'division': self.read_by_division
         }
         self._object_keys = {
-            'code' : self.read_by_code
+            'code': self.read_by_code
         }
         self._test_data = test_data
 

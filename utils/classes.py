@@ -10,9 +10,9 @@ class SQLiteTable:
         self.db_dir = 'path'
         self.dataclass = BaseDataClass
         self._table_name = 'base'
-        self._group_keys = []
-        self._object_keys = []
-        self._test_data = []
+        self._group_keys = {}
+        self._object_keys = {}
+        self._test_data = {}
 
     
     #------------------------------------------------------# 
