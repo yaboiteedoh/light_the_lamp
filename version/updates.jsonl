@@ -9,3 +9,4 @@
 {'version': '0.3.0', 'hash': 'efc8139974192a407e2c49fbddf9d129fe0317f', 'message': '0.3.0 -built teams api -built teams dataclass -built teams test function'}
 {'version': '0.3.1', 'hash': '12d20142c4d926deda1e73bc35d75937f4aa0b4', 'message': 'updated readme'}
 {'version': '0.3.2', 'hash': '262ff96d02d0af279ad861a7dd911238f594001', 'message': 'added __pychache__ to the gitignore'}
+{'version': '0.3.3', 'hash': '7ab46c50b4f5ad18e66117c49d012ea4595d6be', 'message': 'started work on the player table class -still need to write test script -maybe abstract the compare_data and compare_items functions to a generic SQLiteTable class'}

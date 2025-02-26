@@ -3,6 +3,8 @@ from dataclasses import dataclass, field, asdict
 from paths import Path
 from io import StringIO
 
+from utils.classes import SQLiteTable
+
 
 ###############################################################################
 
@@ -42,8 +44,11 @@ test_data = [
 ###############################################################################
 
 
-class TeamsTable:
+class TeamsTable(SQLiteTable):
     def __init__(self, testing=False, results=None):
+        self._table_name = 'teams'
+        self._dataclass = Player
+
         if not testing:
             self.db_dir = str(Path('database', 'data.db'))
         else:
@@ -102,7 +107,7 @@ class TeamsTable:
     def read_all(self) -> list[Team]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._team_row_factory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM teams'
             cur.execute(sql)
             return cur.fetchall()
@@ -111,7 +116,7 @@ class TeamsTable:
     def read_by_rowid(self, rowid: int) -> Team:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._team_row_factory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM teams WHERE rowid=?'
             cur.execute(sql, (rowid,))
             return cur.fetchone()
@@ -120,7 +125,7 @@ class TeamsTable:
     def read_by_conference(self, conference: str) -> list[Team]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._team_row_factory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM teams WHERE conference=?'
             cur.execute(sql, (conference,))
             return cur.fetchall()
@@ -129,7 +134,7 @@ class TeamsTable:
     def read_by_division(self, division: str) -> list[Team]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._team_row_factory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM teams WHERE division=?'
             cur.execute(sql, (division,))
             return cur.fetchall()
@@ -138,7 +143,7 @@ class TeamsTable:
     def read_by_code(self, team_code: str) -> Team:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._team_row_factory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM teams WHERE code=?'
             cur.execute(sql, (team_code,))
             return cur.fetchone()
@@ -147,15 +152,9 @@ class TeamsTable:
     #::::::::::::::::::::::::::::::::::::::::::::::::::::::# 
 
 
-    def _team_row_factory(self, cur, row):
-        fields = [column[0] for column in cur.description]
-        as_dict = {key: value for key, value in zip(fields, row)}
-        return Team(**as_dict)
-
-
     def _test(self, results: StringIO) -> None:
         self._reset_table()
-        results.write('testing teams table')
+        results.write('\ntesting teams table')
         
         test_objects, \
         conferences, \
@@ -163,8 +162,8 @@ class TeamsTable:
         divisions, \
         teams_by_division = \
         self._setup_testing_data(test_data)
-                results.write('\n\ttesting teams.add(), teams.read_all()')
 
+        results.write('\n\ttesting teams.add(), teams.read_all()')
         for obj, team in zip(test_objects, test_data):
             team['rowid'] = db.add_support_request(obj)
         
@@ -174,32 +173,24 @@ class TeamsTable:
         results.write('\n\ttesting teams.read_by_rowid()')
         for team in test_data:
             obj_rowid = self.read_by_rowid(team['rowid']).as_dict
-            self._compare_items(team, obj_rowid)
+            self._compare_items(results, team, obj_rowid)
 
         results.write('\n\ttesting teams.read_by_conference()')
         for conference in conferences:
             data_list = teams_by_conference[conference]
             db_objs = self.read_by_conference(conference)
-            self._compare_data(data_list, db_objs)
+            self._compare_data(results, data_list, db_objs)
 
         results.write('\n\ttesting teams.read_by_division()')
         for division in divisions:
-            data_list = teams_by_division[division]
+            data_list = self.teams_by_division[division]
             db_objs = self.read_by_division(division)
-            self._compare_data(data_list, db_objs)
+            self._compare_data(results, data_list, db_objs)
 
         results.write('\n\ttesting teams.read_by_code()')
+        for team in test_data:
             obj_code = self.read_by_code(team['code']).as_dict
-            self._compare_items(team, obj_code)
-
-
-    def _reset_table():
-        with sqlite3.connect(self.db_dir) as con:
-            cur = con.cursor()
-            sql = 'DROP TABLE teams'
-            cur.execute(sql)
-
-        self.init_db()
+            self._compare_items(results, team, obj_code)
 
 
     def _setup_testing_data(test_data):
@@ -233,30 +224,6 @@ class TeamsTable:
             divisions,
             teams_by_division
         )
-
-
-    def _compare_data(results, data_list, objects_list):
-        for i, tup in enumerate(zip(data_list, objects_list)):
-            data, obj = tup
-            obj = obj.as_dict
-            self._compare_items(results, data, obj, i)
-
-
-    def _compare_items(results, data, obj, i=None):
-        for key, value in data.items():
-            if value != obj[key]:
-                error_message = f'''
-                    (~)ERROR in test object {i}: key {key}
-                        (~~)request value: {value}
-                        (~~)type: {type(value)}
-                        (~~)object value: {obj[key]}
-                        (~~)type: {type(obj[key])}
-                '''
-                error_message = error_message.replace("    ", "")
-                error_message = error_message.replace("(~)", "\t\t")
-                error_message = error_message.replace("(~~)", "\t\t\t")
-                results.write(error_message)
-
 
 #-----------------------------------------------------------------------------#
 

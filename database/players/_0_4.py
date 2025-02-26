@@ -1,12 +1,25 @@
 import sqlite3
 from dataclasses import dataclass, field, asdict
+from paths import Path
+from io import StringIO
+
+from utils.classes import SQLiteTable
 
 
 ###############################################################################
 
 
-class PlayersTable:
+test_data = []
+
+
+###############################################################################
+
+
+class PlayersTable(SQLiteTable):
     def __init__(self, testing=False, results=None):
+        self._table_name = 'players'
+        self._dataclass = Player
+
         if not testing:
             self.db_dir = str(Path('database', 'data.db'))
         else:
@@ -19,6 +32,8 @@ class PlayersTable:
 
     def init_db(self):
         with sqlite3.connect(self.db_dir) as con:
+            self._table_name = 'players'
+
             cur = con.cursor()
             sql = '''
                 CREATE TABLE players(
@@ -65,7 +80,7 @@ class PlayersTable:
     def read_all(self) -> list[Player]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._player_row_factory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM players'
             cur.execute(sql)
             return cur.fetchall()
@@ -74,7 +89,7 @@ class PlayersTable:
     def read_by_rowid(self, rowid: int) -> Player:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._player_row_factory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM players WHERE rowid=?'
             cur.execute(sql, (rowid,))
             return cur.fetchone()
@@ -83,7 +98,7 @@ class PlayersTable:
     def read_by_team(self, team_rowid: int) -> list[Player]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._player_row_factory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM players WHERE team=?'
             cur.execute(sql, (team_rowid,))
             return cur.fetchall()
@@ -92,7 +107,7 @@ class PlayersTable:
     def read_by_status(self, roster_status: str) -> list[Player]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._player_row_factory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM players WHERE roster_status=?'
             cur.execute(sql, (rowid,))
             return cur.fetchall()
@@ -102,7 +117,7 @@ class PlayersTable:
     def read_by_name(self, name: str) -> list[Player]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._player_row_factory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM players WHERE player_name=?'
             cur.execute(sql, (rowid,))
             return cur.fetchall()
@@ -111,7 +126,7 @@ class PlayersTable:
     def read_by_nhlid(self, nhlid: int) -> Player:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._player_row_factory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM players WHERE nhlid=?'
             cur.execute(sql, (rowid,))
             return cur.fetchone()
@@ -120,10 +135,57 @@ class PlayersTable:
     #::::::::::::::::::::::::::::::::::::::::::::::::::::::# 
 
 
-    def _player_row_factory(self, cur, row):
-        fields = [column[0] for column in cur.description]
-        as_dict = {key: value for key, value in zip(fields, row)}
-        return Player(**as_dict)
+    def _test(self, results: StringIO):
+        self._reset_table()
+        results.write('\ntesting players table')
+
+        # test_objects, \
+        # teams, \
+        # players_by_team, \
+        # status, \
+        # players_by_status, \
+        # names, \
+        # players_by_name = \
+        # self._setup_testing_data(test_data)
+
+        results.write('\n\ttesting players.add(), players.read_all()')
+        for obj, player in zip(test_objects, test_data):
+            player['rowid'] = db.add_support_request(obj)
+
+        db_players = self.read_all()
+        self._compare_data(results, test_data, db_teams)
+
+        results.write('\n\ttesting players.read_by_rowid()')
+        for player in test_data:
+            obj_rowid = self.read_by_rowid(player['rowid']).as_dict
+            self._compare_items(results, player, obj_rowid)
+
+        results.write('\n\ttesting players.read_by_team()')
+        for team in teams:
+            data_list = (players_by_team[team])
+            db_objs = self.read_by_team(team)
+            self._compare_data(results, data_list, db_objs)
+
+        results.write('\n\ttesting players.read_by_status()')
+        for status in statuses:
+            data_list = (players_by_status[status])
+            db_objs = self.read_by_status(status)
+            self._compare_data(results, data_list, db_objs)
+
+        results.write('\n\ttesting players.read_by_name()')
+        for name in names:
+            data_list = (players_by_name[name])
+            db_objs = self.read_by_name(name)
+            self._compare_data(results, data_list, db_objs)
+
+        results.write('\n\ttesting players.read_by_nhlid()')
+        for player in test_data:
+            obj_nhlid = self.read_by_nhlid(player['nhlid'])
+            self._compare_items(results, player, obj_nhlid)
+
+
+        # def self._setup_testing_data(test_data):
+        
 
 
 #-----------------------------------------------------------------------------#

@@ -28,6 +28,7 @@ class Database:
         else:
             results = StringIO()
             _ = teams_table(version_number, testing, results)
+            _ = players_table(version_number, testing, results)
 
 
 ###############################################################################
