@@ -30,7 +30,6 @@ def main():
         update_type = input(prompt_text)
 
     if (commit_message := [arg for arg in argv[2:]]) != []:
-        print(commit_message)
         commit_message = ' '.join(commit_message)
     else:
         commit_message = input('Enter Git Commit message:\n')
