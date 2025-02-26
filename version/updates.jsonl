@@ -20,3 +20,4 @@
 {'version': '0.4.4', 'hash': 'beb6d2b038353b1218d9c98f5e916a9064a3b3f', 'message': 'test 2'}
 {'version': '0.4.5', 'hash': '476c2ef1dd53e302afd2101ca8dbe96257fd278', 'message': 'upgraded git push script for command line git commit messages'}
 {'version': '0.5.0', 'hash': 'debfb26776b2a98951c3ea805175a594f35f5ef', 'message': '0.4.0 built games table api'}
+{'version': '0.6.0', 'hash': '204011f64ac6007e16b97b678e852321e32dc81', 'message': '0.6.0 built player_stats table api'}

@@ -16,7 +16,7 @@ test_data = []
 
 
 class PlayerStatsTable(SQLiteTable):
-    def __init__(self, tsting=False, results=None):
+    def __init__(self, testing=False, results=None):
         if not testing:
             self.db_dir = str(Path('database', 'data.db'))
         else: 
