@@ -11,3 +11,4 @@
 {'version': '0.3.2', 'hash': '262ff96d02d0af279ad861a7dd911238f594001', 'message': 'added __pychache__ to the gitignore'}
 {'version': '0.3.3', 'hash': '7ab46c50b4f5ad18e66117c49d012ea4595d6be', 'message': 'started work on the player table class -still need to write test script -maybe abstract the compare_data and compare_items functions to a generic SQLiteTable class'}
 {'version': '0.3.4', 'hash': '85486f52623838b0d21a628fd6da1580748c0e5', 'message': 'abstracted some of the private functions onto a base SQLiteTable class -generalized row factory -comare items and compare data test functions -Looking for a way to condense test script functions into a test fetchone and test fetchall generic function to keep the table classes cleaner/minimize test function size'}
+{'version': '0.3.5', 'hash': 'ee5f7ca0068035f185cc5f88e978e55e49f6d9b', 'message': 'fixed database __init__()'}

@@ -8,8 +8,11 @@ class SQLiteTable:
     # override in the child class
     def __init__(self):
         self.db_dir = 'path'
+        self.dataclass = BaseDataClass
         self._table_name = 'base'
-        self._dataclass = BaseDataClass
+        self._group_keys = []
+        self._object_keys = []
+        self._test_data = []
 
     
     #------------------------------------------------------# 
@@ -26,7 +29,7 @@ class SQLiteTable:
     def _dataclass_row_factory(self, cur, row):
         fields = [column[0] for column in cur.description]
         as_dict = {key: value for key, value in zip(fields, row)}
-        return self._dataclass(**as_dict)
+        return self.dataclass(**as_dict)
 
 
     def _reset_table(self):
@@ -36,6 +39,70 @@ class SQLiteTable:
             cur.execute(sql)
 
         self.init_db()
+
+
+    def _setup_testing_data(self):
+        test_encyclopedia = []
+
+        test_encyclopedia.append(
+            [
+                self._dataclass(**obj)
+                for obj in self._test_data
+            ]
+        )
+
+        test_encyclopedia.append({})
+        for key in self._group_keys:
+            options = {obj[key] for obj in test_data}
+            
+            results = {value: [] for value in options}
+            for obj in test_data:
+                value = obj[key]
+                results[value].append(obj)
+
+            test_encyclopedia[1][key] = [options, results]
+
+        return test_encyclopedia
+
+    
+    def _test(self, results):
+        results.write(f'\ntesting {self.table_name} table')
+        data = self._setup_testing_data(self.test_data)
+        
+        test_objects = data[0]
+        results.write(f'\n\ttesting {self.table_name}.add(), {self.table_name}.read_all(), {self.table_name}.read_by_rowid')
+        self._test_global_funcs(results, test_objects)
+
+        for key, func in self._group_keys.items():
+            results.write(f'\n\ttesting {self.table_name}.read_by_{key}()')
+            self._test_group_read(func, results, *data[1][key])
+
+        for key, func in self._object_keys.items():
+            results.write(f'\n\ttesting {self.table_name}.read_by_{key}()')
+            self._test_obj_read(func, results, key)
+
+
+    def _test_global_funcs(self, results, test_objects):
+        for obj, data in zip(test_objects, self.test_data):
+            data['rowid'] = self.add(obj)
+        
+        db_objs = self.read_all()
+        self._compare_data(results, self.test_data, db_objs)
+
+        self._test_obj_read(self.read_by_rowid, results, 'rowid')
+
+    
+    def _test_group_read(self, func, results, options, values):
+        for value in options:
+            data_list = values[value]
+            db_objs = func(value)
+            self._compare_data(results, data_list, db_objs)
+
+
+    def _test_obj_read(self, func, results, key):
+        for obj in self.test_data:
+            response = func(obj[key]).as_dict
+            self._compare_items(results, obj, response)
 
 
     def _compare_data(self, results, data_list, objects_list):
