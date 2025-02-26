@@ -50,14 +50,13 @@ class TeamsTable(SQLiteTable):
             self.db_dir = str(Path('database', 'data.db'))
         else:
             self.db_dir = str(Path('database', 'testing', 'teams.db'))
-
         self.dataclass = Player
 
         self._table_name = 'teams'
-        self._group_keys = [
+        self._group_keys = {
             'conference': self.read_by_conference,
             'division': self.read_by_division
-        ]
+        }
         self._object_keys = {
             'code' : self.read_by_code
         }

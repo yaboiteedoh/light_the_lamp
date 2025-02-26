@@ -9,7 +9,32 @@ from utils.classes import SQLiteTable
 ###############################################################################
 
 
-test_data = []
+test_data = [
+    {
+        "nhlid": 5,
+        "team_rowid": 9,
+        "status": "active",
+        "name": "Patrick Kane"
+    },
+    {
+        "nhlid": 6,
+        "team_rowid": 9,
+        "status": "active",
+        "name": "Sebastian Aho"
+    },
+    {
+        "nhlid": 7,
+        "team_rowid": 10,
+        "status": "inactive",
+        "name": "Sebastian Aho"
+    },
+    {
+        "nhlid": 8,
+        "team_rowid": 9,
+        "status": "inactive",
+        "name": "Dylan Larkin"
+    }
+]
 
 
 ###############################################################################
@@ -17,14 +42,23 @@ test_data = []
 
 class PlayersTable(SQLiteTable):
     def __init__(self, testing=False, results=None):
-        self._table_name = 'players'
-        self._dataclass = Player
-
         if not testing:
             self.db_dir = str(Path('database', 'data.db'))
         else:
             self.db_dir = str(Path('database', 'testing', 'players.db'))
-            self._test(results)
+        self.dataclass = Player
+
+        self._table_name = 'players'
+        self._group_keys = {
+            'team_rowid': self.read_by_team_rowid,
+            'status': self.read_by_status,
+            # There are a few active players who share names
+            'name': self.read_by_name
+        }
+        self._object_keys = {
+            'nhlid': self.read_by_nhlid
+        }
+        self._test_data = test_data
 
 
     #------------------------------------------------------# 
@@ -39,8 +73,8 @@ class PlayersTable(SQLiteTable):
                 CREATE TABLE players(
                     nhlid INT NOT NULL,
                     team_rowid INT NOT NULL,
-                    roster_status TEXT NOT NULL,
-                    player_name TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    name TEXT NOT NULL,
                     rowid INTEGER PRIMARY KEY AUTOINCREMENT
 
                     FOREIGN KEY(team_rowid)
@@ -60,8 +94,8 @@ class PlayersTable(SQLiteTable):
                 INSERT INTO players(
                     nhlid,
                     team_rowid,
-                    roster_status,
-                    player_name
+                    status,
+                    name
                 )
                 VALUES (
                     :nhlid,
@@ -95,7 +129,7 @@ class PlayersTable(SQLiteTable):
             return cur.fetchone()
 
 
-    def read_by_team(self, team_rowid: int) -> list[Player]:
+    def read_by_team_rowid(self, team_rowid: int) -> list[Player]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
             cur.row_factory = self._dataclass_row_factory
@@ -113,7 +147,6 @@ class PlayersTable(SQLiteTable):
             return cur.fetchall()
 
 
-    # There are a few active players who share names
     def read_by_name(self, name: str) -> list[Player]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
@@ -132,62 +165,6 @@ class PlayersTable(SQLiteTable):
             return cur.fetchone()
 
 
-    #::::::::::::::::::::::::::::::::::::::::::::::::::::::# 
-
-
-    def _test(self, results: StringIO):
-        self._reset_table()
-        results.write('\ntesting players table')
-
-        # test_objects, \
-        # teams, \
-        # players_by_team, \
-        # status, \
-        # players_by_status, \
-        # names, \
-        # players_by_name = \
-        # self._setup_testing_data(test_data)
-
-        results.write('\n\ttesting players.add(), players.read_all()')
-        for obj, player in zip(test_objects, test_data):
-            player['rowid'] = db.add_support_request(obj)
-
-        db_players = self.read_all()
-        self._compare_data(results, test_data, db_teams)
-
-        results.write('\n\ttesting players.read_by_rowid()')
-        for player in test_data:
-            obj_rowid = self.read_by_rowid(player['rowid']).as_dict
-            self._compare_items(results, player, obj_rowid)
-
-        results.write('\n\ttesting players.read_by_team()')
-        for team in teams:
-            data_list = (players_by_team[team])
-            db_objs = self.read_by_team(team)
-            self._compare_data(results, data_list, db_objs)
-
-        results.write('\n\ttesting players.read_by_status()')
-        for status in statuses:
-            data_list = (players_by_status[status])
-            db_objs = self.read_by_status(status)
-            self._compare_data(results, data_list, db_objs)
-
-        results.write('\n\ttesting players.read_by_name()')
-        for name in names:
-            data_list = (players_by_name[name])
-            db_objs = self.read_by_name(name)
-            self._compare_data(results, data_list, db_objs)
-
-        results.write('\n\ttesting players.read_by_nhlid()')
-        for player in test_data:
-            obj_nhlid = self.read_by_nhlid(player['nhlid'])
-            self._compare_items(results, player, obj_nhlid)
-
-
-        # def self._setup_testing_data(test_data):
-        
-
-
 #-----------------------------------------------------------------------------#
 
 
@@ -195,8 +172,8 @@ class PlayersTable(SQLiteTable):
 class Player:
     nhlid: int
     team_rowid: int
-    roster_status: str
-    player_name: str
+    status: str
+    name: str
     rowid: int | None = field(default=None)
 
     @property
