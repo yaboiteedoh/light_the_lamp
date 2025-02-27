@@ -1,5 +1,5 @@
 import sqlite3
-from paths import Path
+from pathlib import Path
 from io import StringIO
 
 from utils.classes import SQLiteTable
@@ -13,30 +13,30 @@ test_data = [
     {
         "conference": "eastern",
         "division": "metropolitan",
-        "location": "New York",
-        "name": "Rangers",
-        "code": "NYR"
+        "name": "New York Rangers",
+        "code": "NYR",
+        "nhlid": 1
     },
     {
         "conference": "eastern",
         "division": "atlantic",
-        "location": "Detroit",
-        "name": "Red Wings",
-        "code": "DET"
+        "name": "Detroit Red Wings",
+        "code": "DET",
+        "nhlid": 2
     },
     {
         "conference": "eastern",
         "division": "atlantic",
-        "location": "Boston",
-        "name": "Bruins",
-        "code": "BOS"
+        "name": "Boston Bruins",
+        "code": "BOS",
+        "nhlid": 3
     },
     {
         "conference": "western",
         "division": "pacific",
-        "location": "San Jose",
-        "name": "Sharks",
-        "code": "SJS"
+        "name": "San Jose Sharks",
+        "code": "SJS",
+        "nhlid": 4
     }
 ]
 
@@ -58,6 +58,7 @@ class TeamsTable(SQLiteTable):
             'division': self.read_by_division
         }
         self._object_keys = {
+            'name': self.read_by_name,
             'code': self.read_by_code
         }
         self._test_data = test_data
@@ -73,9 +74,9 @@ class TeamsTable(SQLiteTable):
                 CREATE TABLE teams(
                     conference TEXT NOT NULL,
                     division TEXT NOT NULL,
-                    location TEXT NOT NULL,
                     name TEXT NOT NULL,
-                    code TEXT NOT NULL
+                    code TEXT NOT NULL,
+                    nhlid INT NOT NULL,
                     rowid INTEGER PRIMARY KEY AUTOINCREMENT
                 )
             '''
@@ -92,19 +93,19 @@ class TeamsTable(SQLiteTable):
                 INSERT INTO teams(
                     conference,
                     division,
-                    location,
                     name,
-                    code
+                    code,
+                    nhlid
                 )
                 VALUES (
                     :conference,
                     :division,
-                    :location,
                     :name,
-                    :code
+                    :code,
+                    :nhlid
                 )
             '''
-            cur.execute(sql, **team.as_dict)
+            cur.execute(sql, team.as_dict)
             return cur.lastrowid
 
 
@@ -145,6 +146,15 @@ class TeamsTable(SQLiteTable):
             sql = 'SELECT * FROM teams WHERE division=?'
             cur.execute(sql, (division,))
             return cur.fetchall()
+ 
+
+    def read_by_name(self, name: str) -> Team:
+        with sqlite3.connect(self.db_dir) as con:
+            cur = con.cursor()
+            cur.row_factory = self._dataclass_row_factory
+            sql = 'SELECT * FROM teams WHERE name =?'
+            cur.execute(sql, (name,))
+            return cur.fetchone()
 
 
     def read_by_code(self, team_code: str) -> Team:
@@ -156,11 +166,20 @@ class TeamsTable(SQLiteTable):
             return cur.fetchone()
 
 
+    def read_by_nhlid(self, nhlid: int) -> Team:
+        with sqlite3.connect(self.db_dir) as con:
+            cur = con.cursor()
+            cur.row_factory = self._dataclass_row_factory
+            sql = 'SELECT * FROM teams WHERE nhlid=?'
+            cur.execute(sql, (nhlid,))
+            return cur.fetchone()
+
+
 ###############################################################################
 
 
-def teams_table(testing=False, results=None):
-    return TeamsTable(testing, results)
+def teams_table(testing=False):
+    return TeamsTable(testing)
 
 
 ###############################################################################

@@ -148,7 +148,7 @@ A custom fantasy hockey platform
         - user username
         - user password
         - user email
-
+ 
     - user picks object
         - picks rowid
         - player #1 rowid

@@ -23,6 +23,10 @@ class SQLiteTable:
     def _dataclass_row_factory(self, cur, row):
         fields = [column[0] for column in cur.description]
         as_dict = {key: value for key, value in zip(fields, row)}
+
+        # DEBUG LOGGING
+        # print(self._table_name, 'row_factory', as_dict)
+        
         return self.dataclass(**as_dict)
 
 
@@ -40,48 +44,93 @@ class SQLiteTable:
 
         test_encyclopedia.append(
             [
-                self._dataclass(**obj)
+                self.dataclass(**obj)
                 for obj in self._test_data
             ]
         )
 
         test_encyclopedia.append({})
         for key in self._group_keys:
-            options = {obj[key] for obj in test_data}
-            
-            results = {value: [] for value in options}
-            for obj in test_data:
-                value = obj[key]
-                results[value].append(obj)
+            flag = None
 
-            test_encyclopedia[1][key] = [options, results]
+            if key == 'team_rowid':
+                if self._table_name == 'games':
+                    flag = (self._table_name, key)
+                
+            if not flag:
+                options = {obj[key] for obj in self._test_data}
+                results = {value: [] for value in options}
+
+                for obj in self._test_data:
+                    value = obj[key]
+                    results[value].append(obj)
+
+                test_encyclopedia[1][key] = [options, results]
+
+
+            match flag:
+                case ('games', 'team_rowid'):
+                    options_home = {
+                        obj['home_team_rowid']
+                        for obj in self._test_data
+                    }
+                    options_away = {
+                        obj['away_team_rowid']
+                        for obj in self._test_data
+                    }
+                    options = options_home | options_away
+                    results = {value: [] for value in options}
+                    
+                    for obj in self._test_data:
+                        home = obj['home_team_rowid']
+                        away = obj['away_team_rowid']
+                        results[home].append(obj)
+                        results[away].append(obj)
+
+                    test_encyclopedia[1]['team_rowid'] = [options, results]
+                    
+        # DEBUG LOGGING
+        # print('\n\n', self._table_name, 'table test encyclo', test_encyclopedia)
 
         return test_encyclopedia
 
     
     def _test(self, results):
-        results.write(f'\ntesting {self.table_name} table')
-        data = self._setup_testing_data(self.test_data)
+        results.write(f'\ntesting {self._table_name} table')
+        data = self._setup_testing_data()
         
         test_objects = data[0]
-        results.write(f'\n\ttesting {self.table_name}.add(), {self.table_name}.read_all(), {self.table_name}.read_by_rowid')
+
+        # DEBUG LOGGING
+        # for key, value in data[1].items():
+            # results.write(f'\n{key}:')
+            # for item in value:
+                # results.write(f'\n{str(item)}')
+
+        results.write(f'\n\ttesting {self._table_name}.add(), {self._table_name}.read_all(), {self._table_name}.read_by_rowid')
         self._test_global_funcs(results, test_objects)
 
         for key, func in self._group_keys.items():
-            results.write(f'\n\ttesting {self.table_name}.read_by_{key}()')
+            results.write(f'\n\ttesting {self._table_name}.read_by_{key}()')
             self._test_group_read(func, results, *data[1][key])
 
         for key, func in self._object_keys.items():
-            results.write(f'\n\ttesting {self.table_name}.read_by_{key}()')
+            results.write(f'\n\ttesting {self._table_name}.read_by_{key}()')
             self._test_obj_read(func, results, key)
 
 
     def _test_global_funcs(self, results, test_objects):
-        for obj, data in zip(test_objects, self.test_data):
+
+        # DEBUG LOGGING
+        # for i in self._test_data:
+            # for key, value in i.items():
+                # print(f'{key}: {value} ({type(value)})')
+            
+        for obj, data in zip(test_objects, self._test_data):
             data['rowid'] = self.add(obj)
         
         db_objs = self.read_all()
-        self._compare_data(results, self.test_data, db_objs)
+        self._compare_data(results, self._test_data, db_objs)
 
         self._test_obj_read(self.read_by_rowid, results, 'rowid')
 
@@ -94,7 +143,7 @@ class SQLiteTable:
 
 
     def _test_obj_read(self, func, results, key):
-        for obj in self.test_data:
+        for obj in self._test_data:
             response = func(obj[key]).as_dict
             self._compare_items(results, obj, response)
 

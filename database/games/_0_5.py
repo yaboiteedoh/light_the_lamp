@@ -1,5 +1,5 @@
 import sqlite3
-from paths import Path
+from pathlib import Path
 from io import StringIO
 
 from utils.classes import SQLiteTable
@@ -9,14 +9,59 @@ from utils.dataclasses import Game
 ###############################################################################
 
 
-test_data = []
+test_data = [
+    {
+        'timestamp': 'test',
+        'nhlid': 4,
+        'start_time': 'test',
+        'status': 'active',
+        'home_team_rowid': 1,
+        'away_team_rowid': 2,
+        'clock': 'test',
+        'home_team_points': 0,
+        'away_team_points': 0
+    },
+    {
+        'timestamp': 'test',
+        'nhlid': 5,
+        'start_time': 'test',
+        'status': 'active',
+        'home_team_rowid': 1,
+        'away_team_rowid': 3,
+        'clock': 'test',
+        'home_team_points': 0,
+        'away_team_points': 0
+    },
+    {
+        'timestamp': 'test',
+        'nhlid': 6,
+        'start_time': 'test',
+        'status': 'active',
+        'home_team_rowid': 1,
+        'away_team_rowid': 4,
+        'clock': 'test',
+        'home_team_points': 0,
+        'away_team_points': 0
+    },
+    {
+        'timestamp': 'test',
+        'nhlid': 7,
+        'start_time': 'test',
+        'status': 'active',
+        'home_team_rowid': 3,
+        'away_team_rowid': 4,
+        'clock': 'test',
+        'home_team_points': 0,
+        'away_team_points': 0
+    }
+]
 
 
 ###############################################################################
 
 
 class GamesTable(SQLiteTable):
-    def __init__(self, testing=False, results=None):
+    def __init__(self, testing=False):
         if not testing:
             self.db_dir = str(Path('database', 'data.db'))
         else:
@@ -50,7 +95,7 @@ class GamesTable(SQLiteTable):
                     clock TEXT NOT NULL,
                     home_team_points INTEGER NOT NULL,
                     away_team_points INTEGER NOT NULL,
-                    rowid INTEGER PRIMARY KEY AUTOINCREMENT
+                    rowid INTEGER PRIMARY KEY AUTOINCREMENT,
 
                     FOREIGN KEY(home_team_rowid)
                         REFERENCES teams(rowid)
@@ -77,7 +122,7 @@ class GamesTable(SQLiteTable):
                     away_team_rowid,
                     clock,
                     home_team_points,
-                    away_team_points,
+                    away_team_points
                 )
                 VALUES (
                     :timestamp,
@@ -88,10 +133,10 @@ class GamesTable(SQLiteTable):
                     :away_team_rowid,
                     :clock,
                     :home_team_points,
-                    :away_team_points,
+                    :away_team_points
                 )
             '''
-            cur.execute(sql, **game.as_dict)
+            cur.execute(sql, game.as_dict)
             return cur.lastrowid
 
 
@@ -102,9 +147,9 @@ class GamesTable(SQLiteTable):
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
             cur.row_factory = self._dataclass_row_factory
-            sql = 'SELECT * FROM players'
+            sql = 'SELECT * FROM games'
             cur.execute(sql)
-            return cur.fetchall
+            return cur.fetchall()
 
 
     def read_by_rowid(self, rowid: int) -> Game:
@@ -132,7 +177,7 @@ class GamesTable(SQLiteTable):
             cur.row_factory = self._dataclass_row_factory
             for option in ['home', 'away']:
                 sql = f'SELECT * FROM games WHERE {option}_team_rowid=?'
-                cur.execute(sql, (status,))
+                cur.execute(sql, (rowid,))
                 for result in cur.fetchall():
                     results.append(result)
             return results
@@ -150,8 +195,8 @@ class GamesTable(SQLiteTable):
 ###############################################################################
 
 
-def games_table(testing=False, results=None):
-    return GamesTable(testing, results)
+def games_table(testing=False):
+    return GamesTable(testing)
 
 
 ###############################################################################

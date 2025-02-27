@@ -22,3 +22,4 @@
 {'version': '0.5.0', 'hash': 'debfb26776b2a98951c3ea805175a594f35f5ef', 'message': '0.4.0 built games table api'}
 {'version': '0.6.0', 'hash': '204011f64ac6007e16b97b678e852321e32dc81', 'message': '0.6.0 built player_stats table api'}
 {'version': '0.6.1', 'hash': '98d9931ed7a291baaea9f2cfeb8321697fa6bce', 'message': 'fixed typo'}
+{'version': '0.6.2', 'hash': 'a7a05417f692dbbff8019575246f838c22291e6', 'message': 'added dataclass module in utils'}

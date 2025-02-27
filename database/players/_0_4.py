@@ -1,5 +1,5 @@
 import sqlite3
-from paths import Path
+from pathlib import Path
 from io import StringIO
 
 from utils.classes import SQLiteTable
@@ -14,25 +14,29 @@ test_data = [
         "nhlid": 5,
         "team_rowid": 9,
         "status": "active",
-        "name": "Patrick Kane"
+        "name": "Patrick Kane",
+        "position": "LW"
     },
     {
         "nhlid": 6,
         "team_rowid": 9,
         "status": "active",
-        "name": "Sebastian Aho"
+        "name": "Sebastian Aho",
+        "position": "LW"
     },
     {
         "nhlid": 7,
         "team_rowid": 10,
         "status": "inactive",
-        "name": "Sebastian Aho"
+        "name": "Sebastian Aho",
+        "position": "D"
     },
     {
         "nhlid": 8,
         "team_rowid": 9,
         "status": "inactive",
-        "name": "Dylan Larkin"
+        "name": "Dylan Larkin",
+        "position": "C"
     }
 ]
 
@@ -41,7 +45,7 @@ test_data = [
 
 
 class PlayersTable(SQLiteTable):
-    def __init__(self, testing=False, results=None):
+    def __init__(self, testing=False):
         if not testing:
             self.db_dir = str(Path('database', 'data.db'))
         else:
@@ -75,7 +79,8 @@ class PlayersTable(SQLiteTable):
                     team_rowid INTEGER NOT NULL,
                     status TEXT NOT NULL,
                     name TEXT NOT NULL,
-                    rowid INTEGER PRIMARY KEY AUTOINCREMENT
+                    position TEXT NOT NULL,
+                    rowid INTEGER PRIMARY KEY AUTOINCREMENT,
 
                     FOREIGN KEY(team_rowid)
                         REFERENCES teams(rowid)
@@ -95,16 +100,18 @@ class PlayersTable(SQLiteTable):
                     nhlid,
                     team_rowid,
                     status,
-                    name
+                    name,
+                    position
                 )
                 VALUES (
                     :nhlid,
                     :team_rowid,
-                    :roster_status,
-                    :player_name
+                    :status,
+                    :name,
+                    :position
                 )
             '''
-            cur.execute(sql, **player.as_dict)
+            cur.execute(sql, player.as_dict)
             return cur.lastrowid
 
 
@@ -133,17 +140,17 @@ class PlayersTable(SQLiteTable):
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
             cur.row_factory = self._dataclass_row_factory
-            sql = 'SELECT * FROM players WHERE team=?'
+            sql = 'SELECT * FROM players WHERE team_rowid=?'
             cur.execute(sql, (team_rowid,))
             return cur.fetchall()
 
 
-    def read_by_status(self, roster_status: str) -> list[Player]:
+    def read_by_status(self, status: str) -> list[Player]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
             cur.row_factory = self._dataclass_row_factory
-            sql = 'SELECT * FROM players WHERE roster_status=?'
-            cur.execute(sql, (rowid,))
+            sql = 'SELECT * FROM players WHERE status=?'
+            cur.execute(sql, (status,))
             return cur.fetchall()
 
 
@@ -151,8 +158,17 @@ class PlayersTable(SQLiteTable):
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
             cur.row_factory = self._dataclass_row_factory
-            sql = 'SELECT * FROM players WHERE player_name=?'
-            cur.execute(sql, (rowid,))
+            sql = 'SELECT * FROM players WHERE name=?'
+            cur.execute(sql, (name,))
+            return cur.fetchall()
+
+
+    def read_by_position(self, position: str) -> list[Player]:
+        with sqlite3.connect(self.db_dir) as con:
+            cur = con.cursor()
+            cur.row_factory = self._dataclass_row_factory
+            sql = 'SELECT * FROM players WHERE position=?'
+            cur.execute(sql, (position,))
             return cur.fetchall()
 
 
@@ -161,15 +177,15 @@ class PlayersTable(SQLiteTable):
             cur = con.cursor()
             cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM players WHERE nhlid=?'
-            cur.execute(sql, (rowid,))
+            cur.execute(sql, (nhlid,))
             return cur.fetchone()
 
 
 ###############################################################################
 
 
-def players_table(testing=False, results=None):
-    return PlayersTable(testing, results)
+def players_table(testing=False):
+    return PlayersTable(testing)
 
 
 ###############################################################################

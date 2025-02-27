@@ -1,5 +1,5 @@
 import sqlite3
-from paths import Path
+from pathlib import Path
 from io import StringIO
 
 from utils.classes import SQLiteTable
@@ -9,14 +9,43 @@ from utils.dataclasses import PlayerStat
 ###############################################################################
 
 
-test_data = []
+test_data = [
+    {
+        'game_rowid': 1,
+        'player_rowid': 1,
+        'shots_on_goal': 0,
+        'goals': 0,
+        'assists': 1
+    },
+    {
+        'game_rowid': 1,
+        'player_rowid': 3,
+        'shots_on_goal': 2,
+        'goals': 1,
+        'assists': 0
+    },
+    {
+        'game_rowid': 2,
+        'player_rowid': 4,
+        'shots_on_goal': 6,
+        'goals': 3,
+        'assists': 1
+    },
+    {
+        'game_rowid': 3,
+        'player_rowid': 5,
+        'shots_on_goal': 0,
+        'goals': 0,
+        'assists': 0
+    }
+]
 
 
 ###############################################################################
 
 
 class PlayerStatsTable(SQLiteTable):
-    def __init__(self, testing=False, results=None):
+    def __init__(self, testing=False):
         if not testing:
             self.db_dir = str(Path('database', 'data.db'))
         else: 
@@ -49,8 +78,8 @@ class PlayerStatsTable(SQLiteTable):
                     player_rowid INTEGER NOT NULL,
                     shots_on_goal INTEGER NOT NULL,
                     goals INTEGER NOT NULL,
-                    assists INTEGER NOT NULL
-                    rowid INTEGER PRIMARY KEY AUTOINCREMENT
+                    assists INTEGER NOT NULL,
+                    rowid INTEGER PRIMARY KEY AUTOINCREMENT,
 
                     FOREIGN KEY(player_rowid)
                         REFERENCES players(rowid)
@@ -83,7 +112,7 @@ class PlayerStatsTable(SQLiteTable):
                     :assists
                 )
             '''
-            cur.execute(sql, **player_stat.as_dict)
+            cur.execute(sql, player_stat.as_dict)
             return cur.lastrowid
 
 
@@ -111,53 +140,53 @@ class PlayerStatsTable(SQLiteTable):
     def read_by_game_rowid(self, game_rowid: int) -> list[PlayerStat]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._dataclass_row_fafctory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM player_stats WHERE game_rowid=?'
-            cur.execute(sql, (rowid,))
-            return cur.fetchone()
+            cur.execute(sql, (game_rowid,))
+            return cur.fetchall()
 
 
     def read_by_player_rowid(self, player_rowid: int) -> list[PlayerStat]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._dataclass_row_fafctory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM player_stats WHERE player_rowid=?'
-            cur.execute(sql, (rowid,))
-            return cur.fetchone()
+            cur.execute(sql, (player_rowid,))
+            return cur.fetchall()
 
 
     def read_by_shots_on_goal(self, shots_on_goal: int) -> list[PlayerStat]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._dataclass_row_fafctory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM player_stats WHERE shots_on_goal=?'
-            cur.execute(sql, (rowid,))
-            return cur.fetchone()
+            cur.execute(sql, (shots_on_goal,))
+            return cur.fetchall()
 
 
     def read_by_goals(self, goals: int) -> list[PlayerStat]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._dataclass_row_fafctory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM player_stats WHERE goals=?'
-            cur.execute(sql, (rowid,))
-            return cur.fetchone()
+            cur.execute(sql, (goals,))
+            return cur.fetchall()
 
 
     def read_by_assists(self, assists: int) -> list[PlayerStat]:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._dataclass_row_fafctory
+            cur.row_factory = self._dataclass_row_factory
             sql = 'SELECT * FROM player_stats WHERE assists=?'
-            cur.execute(sql, (rowid,))
-            return cur.fetchone()
+            cur.execute(sql, (assists,))
+            return cur.fetchall()
 
 
 ###############################################################################
 
 
-def player_stats_table(testing=False, results=None):
-    return PlayerStatsTable(testing, results)
+def player_stats_table(testing=False):
+    return PlayerStatsTable(testing)
 
 
 ###############################################################################

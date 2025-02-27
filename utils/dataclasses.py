@@ -8,9 +8,9 @@ from dataclasses import dataclass, field, asdict
 class Team:
     conference: str
     division: str
-    location: str
     name: str
     code: str
+    nhlid: int
     rowid: int | None = field(default=None)
 
     @property
@@ -28,6 +28,7 @@ class Player:
     team_rowid: int
     status: str
     name: str
+    position: str
     rowid: int | None = field(default=None)
 
     @property
@@ -50,7 +51,7 @@ class Game:
 
     @property
     def as_dict(self):
-        asdict(self)
+        return asdict(self)
 
 
 
@@ -58,14 +59,14 @@ class Game:
 class PlayerStat:
     game_rowid: int
     player_rowid: int
-    shots_on_goal: int = field(dfeault=0)
+    shots_on_goal: int = field(default=0)
     goals: int = field(default=0)
     assists: int = field(default=0)
     rowid: int | None = field(default=None)
 
     @property
     def as_dict(self):
-        asdict(self)
+        return asdict(self)
 
 
 ###############################################################################
