@@ -1,9 +1,9 @@
 import sqlite3
-from dataclasses import dataclass, field, asdict
 from paths import Path
 from io import StringIO
 
 from utils.classes import SQLiteTable
+from utils.dataclasses import Team
 
 
 ###############################################################################
@@ -154,27 +154,6 @@ class TeamsTable(SQLiteTable):
             sql = 'SELECT * FROM teams WHERE code=?'
             cur.execute(sql, (team_code,))
             return cur.fetchone()
-
-
-#-----------------------------------------------------------------------------#
-
-
-@dataclass(slots=True)
-class Team:
-    conference: str
-    division: str
-    location: str
-    name: str
-    code: str
-    rowid: int | None = field(default=None)
-
-    @property
-    def full_name(self):
-        return f"{self.location} {self.name}"
-
-    @property
-    def as_dict(self):
-        return asdict(self)
 
 
 ###############################################################################

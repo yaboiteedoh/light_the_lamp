@@ -1,9 +1,9 @@
 import sqlite3
-from dataclasses import dataclass, field, asdict
 from paths import Path
 from io import StringIO
 
 from utils.classes import SQLiteTable
+from utils.dataclasses import PlayerStat
 
 
 ###############################################################################
@@ -151,23 +151,6 @@ class PlayerStatsTable(SQLiteTable):
             sql = 'SELECT * FROM player_stats WHERE assists=?'
             cur.execute(sql, (rowid,))
             return cur.fetchone()
-
-
-#-----------------------------------------------------------------------------#
-
-
-@dataclass(slots=True)
-class PlayerStat:
-    game_rowid: int
-    player_rowid: int
-    shots_on_goal: int = field(dfeault=0)
-    goals: int = field(default=0)
-    assists: int = field(default=0)
-    rowid: int | None = field(default=None)
-
-    @property
-    def as_dict(self):
-        asdict(self)
 
 
 ###############################################################################

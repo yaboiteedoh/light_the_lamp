@@ -1,14 +1,8 @@
-from dataclasses import dataclass
-
-
-###############################################################################
-
-
 class SQLiteTable:
     # override in the child class
     def __init__(self):
         self.db_dir = 'path'
-        self.dataclass = BaseDataClass
+        self.dataclass = None
         self._table_name = 'base'
         self._group_keys = {}
         self._object_keys = {}
@@ -127,14 +121,6 @@ class SQLiteTable:
                 error_message = error_message.replace("(~)", "\t\t")
                 error_message = error_message.replace("(~~)", "\t\t\t")
                 results.write(error_message)
-
-
-#-----------------------------------------------------------------------------#
-
-
-@dataclass(slots=True)
-class BaseDataClass:
-    members: None
 
 
 ###############################################################################

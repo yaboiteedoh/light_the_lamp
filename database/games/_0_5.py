@@ -1,9 +1,9 @@
 import sqlite3
-from dataclasses import dataclass, field, asdict
 from paths import Path
 from io import StringIO
 
 from utils.classes import SQLiteTable
+from utils.dataclasses import Game
 
 
 ###############################################################################
@@ -145,27 +145,6 @@ class GamesTable(SQLiteTable):
             sql = 'SELECT * FROM games WHERE nhlid=?'
             cur.execute(sql, (nhlid,))
             return cur.fetchone()
-
-
-#-----------------------------------------------------------------------------#
-
-
-@dataclass(slots=True)
-class Game:
-    timestamp: str
-    nhlid: int
-    start_time: str
-    status: str
-    home_team_rowid: int
-    away_team_rowid: int
-    clock: str = field(default='n/a')
-    home_team_points: int = field(default=0)
-    away_team_points: int = field(default=0)
-    rowid: int | None = field(default=None)
-
-    @property
-    def as_dict(self):
-        asdict(self)
 
 
 ###############################################################################
