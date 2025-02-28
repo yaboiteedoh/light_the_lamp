@@ -24,3 +24,4 @@
 {'version': '0.6.1', 'hash': '98d9931ed7a291baaea9f2cfeb8321697fa6bce', 'message': 'fixed typo'}
 {'version': '0.6.2', 'hash': 'a7a05417f692dbbff8019575246f838c22291e6', 'message': 'added dataclass module in utils'}
 {'version': '0.6.3', 'hash': '10440557dc9ded1bd7aa2cdb85cbb89888404ea', 'message': 'got the test function working properly, though I am getting a bug in games.read_by_team_rowid I need to investigate'}
+{'version': '0.6.4', 'hash': 'a0f615f2579a9ca2906e525cd4f401d60f0c575', 'message': 'fixed the games table by sorting both the test data and return objects in the test function'}

@@ -55,6 +55,7 @@ class Database:
         for table in self.build_sequence:
             table.init_db()
             if testing:
+                results.write(f'\n\ninitializing {table._table_name} table')
                 table._test(results)
 
 
@@ -62,7 +63,7 @@ class Database:
 
 
     def _test(self, results, version_number):
-        results.write(f'\n\n\tSTARTING DATABASE INTEGRATION TEST\n\tFOR VERSION {version_number.as_str}\n\n')
+        results.write(f'\n\n\tSTARTING DATABASE INTEGRATION TEST\n\tFOR LIGHT_THE_LAMP v{version_number.as_str}\n\n')
         teardown_sequence = self.build_sequence[::1]
         for table in teardown_sequence:
             with sqlite3.connect(table.db_dir) as con:
@@ -73,13 +74,13 @@ class Database:
                 except sqlite3.OperationalError as e:
                     error = str(e)
                     if error[:13] == 'no such table':
-                        print(f'tried dropping nonexistent table: test.{error[15:]}')
+                        results.write(f'\ntried dropping nonexistent table: test.{error[15:]}')
                         con.rollback()
                         continue
                 else:
-                    print(f'dropped table: test.{table._table_name}')
-
+                    results.write(f'\ndropped table: test.{table._table_name}')
         self.init_dbs(testing=True, results=results)
+        results.write('\n\n')
         print(results.getvalue())
 
 
