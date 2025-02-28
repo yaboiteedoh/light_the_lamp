@@ -1,3 +1,6 @@
+from operator import itemgetter
+
+
 class SQLiteTable:
     # override in the child class
     def __init__(self):
@@ -87,6 +90,10 @@ class SQLiteTable:
                         results[home].append(obj)
                         results[away].append(obj)
 
+                    # DEBUG LOGGING
+                    # for key, value in results.items():
+                        # print('\n', key, value, sep='\n')
+
                     test_encyclopedia[1]['team_rowid'] = [options, results]
                     
         # DEBUG LOGGING
@@ -111,8 +118,13 @@ class SQLiteTable:
         self._test_global_funcs(results, test_objects)
 
         for key, func in self._group_keys.items():
-            results.write(f'\n\ttesting {self._table_name}.read_by_{key}()')
-            self._test_group_read(func, results, *data[1][key])
+            if key == 'team_rowid' and self._table_name == 'games':
+                results.write(f'\n\ttesting {self._table_name}.read_by_{key}()')
+                self._test_games_team_rowid(func, results, *data[1][key])
+            
+            else:
+                results.write(f'\n\ttesting {self._table_name}.read_by_{key}()')
+                self._test_group_read(func, results, *data[1][key])
 
         for key, func in self._object_keys.items():
             results.write(f'\n\ttesting {self._table_name}.read_by_{key}()')
@@ -140,6 +152,32 @@ class SQLiteTable:
             data_list = values[value]
             db_objs = func(value)
             self._compare_data(results, data_list, db_objs)
+            # DEBUG LOGGING
+            # if func == self.read_by_team_rowid and self._table_name == 'games':
+                # print('\n\n', data_list, '\n\n')
+                # print('\n\n', db_objs, '\n\n')
+
+
+    # def read_by_team_rowid(self):
+        # pass
+
+
+    def _test_games_team_rowid(self, func, results, options, values):
+        testing_list = []
+        for value in options:
+            data_list = values[value]
+            db_objs = func(value)
+
+            for i, obj in enumerate(db_objs):
+                db_objs[i] = obj.as_dict
+
+            db_objs = sorted(db_objs, key=itemgetter('home_team_rowid'))
+
+            for i, obj in enumerate(db_objs):
+                db_objs[i] = self.dataclass(**obj)
+
+        self._compare_data(results, data_list, db_objs)
+
 
 
     def _test_obj_read(self, func, results, key):

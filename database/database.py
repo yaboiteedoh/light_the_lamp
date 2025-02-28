@@ -42,7 +42,7 @@ class Database:
 
         if testing:
             try:
-                self._test(results)
+                self._test(results, version_number)
             except BaseException as e:
                 print(results.getvalue())
                 raise e
@@ -61,7 +61,8 @@ class Database:
     #::::::::::::::::::::::::::::::::::::::::::::::::::::::# 
 
 
-    def _test(self, results):
+    def _test(self, results, version_number):
+        results.write(f'\n\n\tSTARTING DATABASE INTEGRATION TEST\n\tFOR VERSION {version_number.as_str}\n\n')
         teardown_sequence = self.build_sequence[::1]
         for table in teardown_sequence:
             with sqlite3.connect(table.db_dir) as con:
