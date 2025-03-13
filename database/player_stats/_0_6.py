@@ -67,7 +67,7 @@ class PlayerStatsTable(SQLiteTable):
         self._table_name = 'player_stats'
         self._group_keys = {
             'game_rowid': self.read_by_game_rowid,
-            'player_rowid': self.read_by_player_rowid,
+            'player_nhlid': self.read_by_player_rowid,
         }
         self._object_keys = {
 
@@ -84,7 +84,8 @@ class PlayerStatsTable(SQLiteTable):
             sql = '''
                 CREATE TABLE player_stats(
                     game_rowid INTEGER NOT NULL,
-                    player_rowid INTEGER NOT NULL,
+                    player_nhlid INTEGER NOT NULL,
+                    team_rowid INTEGER NOT NULL,
                     goals INTEGER NOT NULL,
                     assists INTEGER NOT NULL,
                     hits INTEGER NOT NULL,
@@ -92,19 +93,22 @@ class PlayerStatsTable(SQLiteTable):
                     shots_on_goal INTEGER NOT NULL,
                     rowid INTEGER PRIMARY KEY AUTOINCREMENT,
 
-                    FOREIGN KEY(player_rowid)
-                        REFERENCES players(rowid)
+                    FOREIGN KEY(player_nhlid)
+                        REFERENCES players(nhlid)
                     FOREIGN KEY(game_rowid)
                         REFERENCES games(rowid)
+                    FOREIGN KEY(team_rowid)
+                        REFERENCES teams(rowid)
                 )
             '''
             cur.execute(sql)
 
 
-    def update_by_game(self, boxscore, skater):
+    def update_by_game(self, boxscore, skater, team_rowid, game_rowid):
         player_stat_data = [
-            boxscore['id'],
+            game_rowid,
             skater['playerId'],
+            team_rowid,
             skater['goals'],
             skater['assists'],
             skater['hits'],
@@ -131,7 +135,8 @@ class PlayerStatsTable(SQLiteTable):
             sql = '''
                 INSERT INTO player_stats(
                     game_rowid,
-                    player_rowid,
+                    player_nhlid,
+                    team_rowid,
                     shots_on_goal,
                     goals,
                     assists,
@@ -141,7 +146,8 @@ class PlayerStatsTable(SQLiteTable):
                 )
                 VALUES (
                     :game_rowid,
-                    :player_rowid,
+                    :player_nhlid,
+                    :team_rowid,
                     :shots_on_goal,
                     :goals,
                     :assists,
@@ -188,7 +194,7 @@ class PlayerStatsTable(SQLiteTable):
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
             cur.row_factory = self._dataclass_row_factory
-            sql = 'SELECT * FROM player_stats WHERE player_rowid=?'
+            sql = 'SELECT * FROM player_stats WHERE player_nhlid=?'
             cur.execute(sql, (player_rowid,))
             return cur.fetchall()
 
@@ -201,7 +207,7 @@ class PlayerStatsTable(SQLiteTable):
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
             cur.row_factory = self._dataclass_row_factory
-            sql = 'SELECT * FROM player_stats WHERE player_rowid=? AND game_rowid=?'
+            sql = 'SELECT * FROM player_stats WHERE player_nhlid=? AND game_rowid=?'
             cur.execute(sql, (player_rowid, game_rowid))
             return cur.fetchone()
 

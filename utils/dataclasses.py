@@ -55,7 +55,8 @@ class Game:
 @dataclass(slots=True)
 class PlayerStat:
     game_rowid: int
-    player_rowid: int
+    player_nhlid: int
+    team_rowid: int
     shots_on_goal: int = field(default=0)
     goals: int = field(default=0)
     assists: int = field(default=0)

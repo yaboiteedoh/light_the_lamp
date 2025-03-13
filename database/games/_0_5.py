@@ -166,16 +166,26 @@ class GamesTable(SQLiteTable):
             return
         all_games = self.read_all()
         for i, game in enumerate(games):
-            print(f'-- Updating boxscore data for Game {i + 1}/{len(games)}/{len(all_games)}')
+            home_team = teams.read_by_rowid(game.home_team_rowid)
+            away_team = teams.read_by_rowid(game.away_team_rowid)
+            print(f'-- Compiling boxscore data for Game {i + 1}/{len(games)}/{len(all_games)}')
             boxscore = nhl.game_center.boxscore(game.nhlid)
             stats = boxscore['playerByGameStats']
             self.update_score(game, nhl, boxscore)
+            game = self.read_by_rowid(game.rowid)
+            print(f'--- {away_team.code} ({game.away_team_points}) @ {home_team.code} ({game.home_team_points})')
             for team, roster in stats.items():
+                db_team = teams.read_by_code(boxscore[team]['abbrev'])
                 for position, skater_list in roster.items():
                     if position == 'goalies':
                         continue
                     for skater in skater_list:
-                        player_stats.update_by_game(boxscore, skater)
+                        player_stats.update_by_game(
+                            boxscore,
+                            skater,
+                            db_team.rowid,
+                            game.rowid
+                        )
                         players.update_by_game(game, skater, team)
      
             game.status = 'COMPILED'

@@ -86,8 +86,6 @@ class Database:
 
         print('- Populating Teams Table')
         self.teams.populate(self.nhl)
-        # for team in self.teams.read_all():
-            # print(team)
 
         print('- Populating Games Tree')
         self.games.populate(
@@ -96,9 +94,6 @@ class Database:
             self.player_stats,
             self.players
         )
-        # for game in self.games.read_all():
-            # print(game)
-
         # test_completed = self.nhl.game_center.boxscore(2024020291)
         # test_future = self.nhl.game_center.boxscore(2024021033)
         # print(*test_future.items(), sep='\n')
@@ -109,6 +104,161 @@ class Database:
         # print(test_completed['clock'])
         # print(test_completed['periodDescriptor'])
         # print('\n\n')
+
+
+    def get_join_players(self, player_rowid=None, team_rowid=None):
+        with sqlite3.connect(self.teams.db_dir) as con:
+            cur = con.cursor()
+            sql = '''
+                SELECT
+                    t.code,
+                    p.*
+                FROM players as p
+                INNER JOIN teams as t ON p.team_rowid = t.rowid
+            '''
+
+            match (player_rowid is None, team_rowid is None):
+                case (True, True):
+                    cur.execute(sql)
+                    return cur.fetchall()
+
+                case (False, True):
+                    sql += '\tWHERE p.rowid=?'
+                    cur.execute(sql, (player_rowid,))
+                    return cur.fetchone()
+
+                case (True, False):
+                    sql += '\tWHERE t.rowid=?'
+                    cur.execute(sql, (team_rowid,))
+                    return cur.fetchall()
+
+                case (False, False):
+                    sql += '\tWHERE p.rowid=? AND t.rowid=?'
+                    cur.execute(sql, (player_rowid, team_rowid))
+                    return cur.fetchone()
+
+
+    def get_join_games(
+        self,
+        game_rowid=None,
+        team_rowid=None,
+        home_team_rowid=None,
+        away_team_rowid=None
+        ):
+        with sqlite3.connect(self.games.db_dir) as con:
+            cur = con.cursor()
+            sql = '''
+                SELECT 
+                    g.rowid,
+                    g.status,
+                    ht.code,
+                    g.home_team_points,
+                    at.code,
+                    g.away_team_points
+                FROM games as g
+                INNER JOIN teams as ht ON g.home_team_rowid = ht.rowid
+                INNER JOIN teams as at ON g.away_team_rowid = at.rowid
+            '''
+
+        if game_rowid is not None:
+            sql += '\tWHERE g.rowid=?'
+            cur.execute(sql, (game_rowid,))
+            return cur.fetchone()
+
+        if team_rowid is not None:
+            sql += '\tWHERE ht.rowid=? OR at.rowid=?'
+            cur.execute(sql, (team_rowid, team_rowid))
+            return cur.fetchall()
+
+        match (
+            home_team_rowid is None,
+            away_team_rowid is None
+        ):
+            case (True, True):
+                cur.execute(sql)
+                return cur.fetchall()
+
+            case (False, False):
+                sql += '\tWHERE ht.rowid=? AND at.rowid=?'
+                cur.execute(sql, (home_team_rowid, away_team_rowid))
+                return cur.fetchall()
+
+            case (False, True):
+                sql += '\tWHERE ht.rowid=?'
+                cur.execute(sql, (home_team_rowid,))
+                return cur.fetchall()
+
+            case (True, False):
+                sql += '\tWHERE at.rowid=?'
+                cur.execute(sql, (away_team_rowid,))
+                return cur.fetchall()
+
+
+    def get_join_player_stats(
+        self,
+        game_rowid=None,
+        player_nhlid=None,
+        team_rowid=None
+    ):
+        with sqlite3.connect(self.player_stats.db_dir) as con:
+            cur = con.cursor()
+            sql = '''
+                SELECT
+                    g.rowid,
+                    t.code,
+                    p.nhlid,
+                    p.position,
+                    p.name,
+                    s.goals,
+                    s.assists,
+                    s.hits,
+                    s.blocked_shots,
+                    s.shots_on_goal
+                FROM player_stats as s
+                INNER JOIN games as g ON s.game_rowid = g.rowid
+                INNER JOIN teams as t ON s.team_rowid = t.rowid
+                INNER JOIN players as p ON s.player_nhlid = p.nhlid
+            '''
+            cur.execute(sql)
+            
+            match (
+                game_rowid is None,
+                player_nhlid is None,
+                team_rowid is None
+            ):
+                case (True, True, True):
+                    cur.execute(sql)
+                    return cur.fetchall()
+
+                case (False, True, True):
+                    sql += '\tWHERE g.rowid = ?'
+                    cur.execute(sql, (game_rowid,))
+                    return cur.fetchall()
+
+                case (True, True, False):
+                    sql += '\tWHERE t.rowid = ?'
+                    cur.execute(sql, (team_rowid,))
+                    return cur.fetchall()
+
+                case (True, False, True):
+                    sql += '\tWHERE p.nhlid = ?'
+                    cur.execute(sql, (player_nhlid,))
+                    return cur.fetchall()
+
+                case (True, False, False):
+                    sql += '\tWHERE t.rowid = ? AND p.nhlid = ?'
+                    cur.execute(sql, (team_rowid, player_nhlid))
+                    return cur.fetchall()
+
+                case (False, True, False):
+                    sql += '\tWHERE g.rowid = ? AND t.rowid = ?'
+                    cur.execute(sql, (game_rowid, team_rowid))
+                    return cur.fetchall()
+
+                case (False, False, True) | (False, False, False):
+                    sql += '\tWHERE g.rowid = ? AND p.nhlid = ?'
+                    cur.execute(sql, (game_rowid, player_nhlid))
+                    return cur.fetchone()
 
 
     #::::::::::::::::::::::::::::::::::::::::::::::::::::::# 
@@ -136,6 +286,7 @@ class Database:
         self.init(testing=True, results=results)
         results.write('\n\n')
         print(results.getvalue())
+
 
 
 ###############################################################################
