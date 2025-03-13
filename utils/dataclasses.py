@@ -26,7 +26,6 @@ class Team:
 class Player:
     nhlid: int
     team_rowid: int
-    status: str
     name: str
     position: str
     rowid: int | None = field(default=None)
@@ -44,7 +43,6 @@ class Game:
     status: str
     home_team_rowid: int
     away_team_rowid: int
-    clock: str = field(default='n/a')
     home_team_points: int = field(default=0)
     away_team_points: int = field(default=0)
     rowid: int | None = field(default=None)
@@ -54,7 +52,6 @@ class Game:
         return asdict(self)
 
 
-
 @dataclass(slots=True)
 class PlayerStat:
     game_rowid: int
@@ -62,6 +59,9 @@ class PlayerStat:
     shots_on_goal: int = field(default=0)
     goals: int = field(default=0)
     assists: int = field(default=0)
+    hits: int = field(default=0)
+    blocked_shots: int = field(default=0)
+    shots_on_goal: int = field(default=0)
     rowid: int | None = field(default=None)
 
     @property

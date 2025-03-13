@@ -11,29 +11,29 @@ from utils.dataclasses import Team
 
 test_data = [
     {
-        "conference": "eastern",
-        "division": "metropolitan",
+        "conference": "E",
+        "division": "M",
         "name": "New York Rangers",
         "code": "NYR",
         "nhlid": 1
     },
     {
-        "conference": "eastern",
-        "division": "atlantic",
+        "conference": "E",
+        "division": "A",
         "name": "Detroit Red Wings",
         "code": "DET",
         "nhlid": 2
     },
     {
-        "conference": "eastern",
-        "division": "atlantic",
+        "conference": "E",
+        "division": "A",
         "name": "Boston Bruins",
         "code": "BOS",
         "nhlid": 3
     },
     {
-        "conference": "western",
-        "division": "pacific",
+        "conference": "W",
+        "division": "P",
         "name": "San Jose Sharks",
         "code": "SJS",
         "nhlid": 4
@@ -59,7 +59,8 @@ class TeamsTable(SQLiteTable):
         }
         self._object_keys = {
             'name': self.read_by_name,
-            'code': self.read_by_code
+            'code': self.read_by_code,
+            'nhlid': self.read_by_nhlid
         }
         self._test_data = test_data
 
@@ -81,6 +82,21 @@ class TeamsTable(SQLiteTable):
                 )
             '''
             cur.execute(sql)
+
+
+    def populate(self, nhl):
+        for team in nhl.teams.teams_info():
+            team_data = [
+                team['conference']['abbr'],
+                team['division']['abbr'],
+                team['name'],
+                team['abbr'],
+                team['franchise_id']
+            ]
+            team_obj = Team(*team_data)
+            if self.read_by_nhlid(team_obj.nhlid) is not None:
+                continue
+            self.add(team_obj)
 
 
     #------------------------------------------------------# 

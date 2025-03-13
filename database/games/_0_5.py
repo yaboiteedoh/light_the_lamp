@@ -1,12 +1,18 @@
 import sqlite3
 from pathlib import Path
 from io import StringIO
+from datetime import datetime
+from time import sleep
 
 from utils.classes import SQLiteTable
-from utils.dataclasses import Game
+from utils.dataclasses import Game, Player
 
 
 ###############################################################################
+
+
+CURRENT_SEASON="20242025"
+banned_codes = ['MUN']
 
 
 test_data = [
@@ -17,7 +23,6 @@ test_data = [
         'status': 'active',
         'home_team_rowid': 1,
         'away_team_rowid': 2,
-        'clock': 'test',
         'home_team_points': 0,
         'away_team_points': 0
     },
@@ -28,7 +33,6 @@ test_data = [
         'status': 'active',
         'home_team_rowid': 1,
         'away_team_rowid': 3,
-        'clock': 'test',
         'home_team_points': 0,
         'away_team_points': 0
     },
@@ -39,7 +43,6 @@ test_data = [
         'status': 'active',
         'home_team_rowid': 1,
         'away_team_rowid': 4,
-        'clock': 'test',
         'home_team_points': 0,
         'away_team_points': 0
     },
@@ -50,7 +53,6 @@ test_data = [
         'status': 'active',
         'home_team_rowid': 3,
         'away_team_rowid': 4,
-        'clock': 'test',
         'home_team_points': 0,
         'away_team_points': 0
     }
@@ -92,7 +94,6 @@ class GamesTable(SQLiteTable):
                     status STR NOT NULL,
                     home_team_rowid INTEGER NOT NULL,
                     away_team_rowid INTEGER NOT NULL,
-                    clock TEXT NOT NULL,
                     home_team_points INTEGER NOT NULL,
                     away_team_points INTEGER NOT NULL,
                     rowid INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -104,6 +105,81 @@ class GamesTable(SQLiteTable):
                 )
             '''
             cur.execute(sql)
+
+
+    def populate(self, nhl, teams, player_stats, players):
+        for team in teams.read_all():
+            schedule = nhl.schedule.get_season_schedule(
+                team_abbr=team.code,
+                season=CURRENT_SEASON
+            )
+            for game in schedule['games']:
+                # print(*game.items(), sep='\n')
+                if game['gameType'] == 1:
+                    continue
+
+                timestamp = datetime.now().timestamp()
+                start_time = datetime.strptime(
+                    game['startTimeUTC'],
+                    '%Y-%m-%dT%H:%M:%SZ'
+                ).timestamp()
+
+                status = 'IMPORTED' if game['gameState'] == 'OFF' else game['gameState']
+
+                if game['awayTeam']['abbrev'] in banned_codes:
+                    continue
+                if game['homeTeam']['abbrev'] in banned_codes:
+                    continue
+                away_team = teams.read_by_code(game['awayTeam']['abbrev'])
+                home_team = teams.read_by_code(game['homeTeam']['abbrev'])
+
+                if away_team is None or home_team is None:
+                    print(game)
+
+                game_data = [
+                    timestamp,
+                    game['id'],
+                    start_time,
+                    status,
+                    home_team.rowid,
+                    away_team.rowid,
+                ]
+                game_obj = Game(*game_data)
+
+                res = self.read_by_nhlid(game_obj.nhlid)
+                if res is not None:
+                    if res.status == 'COMPILED':
+                        continue
+
+                    game_obj.rowid = res.rowid
+                    self.update_status(game_obj)
+                    continue
+
+                self.add(game_obj)
+
+            else:
+                print(f'-- Imported {CURRENT_SEASON} {team.name} games')
+
+        games = self.read_by_status('IMPORTED')
+        if games == []:
+            print('No Games to Update')
+            return
+        all_games = self.read_all()
+        for i, game in enumerate(games):
+            print(f'-- Updating boxscore data for Game {i + 1}/{len(games)}/{len(all_games)}')
+            boxscore = nhl.game_center.boxscore(game.nhlid)
+            stats = boxscore['playerByGameStats']
+            self.update_score(game, nhl, boxscore)
+            for team, roster in stats.items():
+                for position, skater_list in roster.items():
+                    if position == 'goalies':
+                        continue
+                    for skater in skater_list:
+                        player_stats.update_by_game(boxscore, skater)
+                        players.update_by_game(game, skater, team)
+     
+            game.status = 'COMPILED'
+            self.update_status(game)
 
 
     #------------------------------------------------------# 
@@ -120,7 +196,6 @@ class GamesTable(SQLiteTable):
                     status,
                     home_team_rowid,
                     away_team_rowid,
-                    clock,
                     home_team_points,
                     away_team_points
                 )
@@ -131,7 +206,6 @@ class GamesTable(SQLiteTable):
                     :status,
                     :home_team_rowid,
                     :away_team_rowid,
-                    :clock,
                     :home_team_points,
                     :away_team_points
                 )
@@ -190,6 +264,41 @@ class GamesTable(SQLiteTable):
             sql = 'SELECT * FROM games WHERE nhlid=?'
             cur.execute(sql, (nhlid,))
             return cur.fetchone()
+
+
+    #------------------------------------------------------# 
+
+    def update_score(self, game: Game, nhl, boxscore):
+        s = {
+            'rowid': game.rowid,
+            'home_team_points':  boxscore['homeTeam']['score'],
+            'away_team_points': boxscore['awayTeam']['score']
+        }
+        with sqlite3.connect(self.db_dir) as con:
+            cur = con.cursor()
+            sql = '''
+                UPDATE games
+                SET
+                    home_team_points=:home_team_points,
+                    away_team_points=:away_team_points
+                WHERE rowid=:rowid
+            '''
+            cur.execute(sql, s)
+            con.commit()
+
+
+    def update_status(self, game: Game):
+        with sqlite3.connect(self.db_dir) as con:
+            cur = con.cursor()
+            sql = '''
+                UPDATE games
+                SET
+                    status=?
+                WHERE rowid=?
+            '''
+            cur.execute(sql, (game.status, game.rowid))
+            con.commit()
+        
 
 
 ###############################################################################

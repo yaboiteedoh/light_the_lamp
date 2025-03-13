@@ -15,28 +15,40 @@ test_data = [
         'player_rowid': 1,
         'shots_on_goal': 0,
         'goals': 0,
-        'assists': 1
+        'assists': 1,
+        'hits': 0,
+        'blocked_shots': 1,
+        'shots_on_goal': 0
     },
     {
         'game_rowid': 1,
         'player_rowid': 3,
         'shots_on_goal': 2,
         'goals': 1,
-        'assists': 0
+        'assists': 0,
+        'hits': 0,
+        'blocked_shots': 1,
+        'shots_on_goal': 0
     },
     {
         'game_rowid': 2,
         'player_rowid': 4,
         'shots_on_goal': 6,
         'goals': 3,
-        'assists': 1
+        'assists': 1,
+        'hits': 0,
+        'blocked_shots': 1,
+        'shots_on_goal': 0
     },
     {
         'game_rowid': 3,
         'player_rowid': 5,
         'shots_on_goal': 0,
         'goals': 0,
-        'assists': 0
+        'assists': 0,
+        'hits': 0,
+        'blocked_shots': 1,
+        'shots_on_goal': 0
     }
 ]
 
@@ -56,9 +68,6 @@ class PlayerStatsTable(SQLiteTable):
         self._group_keys = {
             'game_rowid': self.read_by_game_rowid,
             'player_rowid': self.read_by_player_rowid,
-            'shots_on_goal': self.read_by_shots_on_goal,
-            'goals': self.read_by_goals,
-            'assists': self.read_by_assists
         }
         self._object_keys = {
 
@@ -76,9 +85,11 @@ class PlayerStatsTable(SQLiteTable):
                 CREATE TABLE player_stats(
                     game_rowid INTEGER NOT NULL,
                     player_rowid INTEGER NOT NULL,
-                    shots_on_goal INTEGER NOT NULL,
                     goals INTEGER NOT NULL,
                     assists INTEGER NOT NULL,
+                    hits INTEGER NOT NULL,
+                    blocked_shots INTEGER NOT NULL,
+                    shots_on_goal INTEGER NOT NULL,
                     rowid INTEGER PRIMARY KEY AUTOINCREMENT,
 
                     FOREIGN KEY(player_rowid)
@@ -88,6 +99,27 @@ class PlayerStatsTable(SQLiteTable):
                 )
             '''
             cur.execute(sql)
+
+
+    def update_by_game(self, boxscore, skater):
+        player_stat_data = [
+            boxscore['id'],
+            skater['playerId'],
+            skater['goals'],
+            skater['assists'],
+            skater['hits'],
+            skater['blockedShots'],
+            skater['sog']
+        ]
+        res = self.read_by_player_and_game_rowids(
+            skater['playerId'],
+            boxscore['id']
+        )
+        if res is not None:
+            player_stat_data.append(res.rowid)
+            self.update(PlayerStat(*player_stat_data))
+        else:
+            self.add(PlayerStat(*player_stat_data))
 
 
     #------------------------------------------------------# 
@@ -102,14 +134,20 @@ class PlayerStatsTable(SQLiteTable):
                     player_rowid,
                     shots_on_goal,
                     goals,
-                    assists
+                    assists,
+                    hits,
+                    blocked_shots,
+                    shots_on_goal
                 )
                 VALUES (
                     :game_rowid,
                     :player_rowid,
                     :shots_on_goal,
                     :goals,
-                    :assists
+                    :assists,
+                    :hits,
+                    :blocked_shots,
+                    :shots_on_goal
                 )
             '''
             cur.execute(sql, player_stat.as_dict)
@@ -155,31 +193,38 @@ class PlayerStatsTable(SQLiteTable):
             return cur.fetchall()
 
 
-    def read_by_shots_on_goal(self, shots_on_goal: int) -> list[PlayerStat]:
+    def read_by_player_and_game_rowids(
+        self,
+        player_rowid: int,
+        game_rowid: int
+    ) -> PlayerStat:
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
             cur.row_factory = self._dataclass_row_factory
-            sql = 'SELECT * FROM player_stats WHERE shots_on_goal=?'
-            cur.execute(sql, (shots_on_goal,))
-            return cur.fetchall()
+            sql = 'SELECT * FROM player_stats WHERE player_rowid=? AND game_rowid=?'
+            cur.execute(sql, (player_rowid, game_rowid))
+            return cur.fetchone()
 
 
-    def read_by_goals(self, goals: int) -> list[PlayerStat]:
+    #------------------------------------------------------# 
+
+
+    def update(self, player_stat: PlayerStat):
         with sqlite3.connect(self.db_dir) as con:
             cur = con.cursor()
-            cur.row_factory = self._dataclass_row_factory
-            sql = 'SELECT * FROM player_stats WHERE goals=?'
-            cur.execute(sql, (goals,))
-            return cur.fetchall()
+            sql = '''
+                UPDATE player_stats
+                SET
+                    goals=:goals,
+                    assists=:assists,
+                    hits=:hits,
+                    blocked_shots=:blocked_shots,
+                    shots_on_goal=:shots_on_goal
+                WHERE rowid=:rowid
+            '''
+            cur.execute(sql, player_stat.as_dict)
+            con.commit()
 
-
-    def read_by_assists(self, assists: int) -> list[PlayerStat]:
-        with sqlite3.connect(self.db_dir) as con:
-            cur = con.cursor()
-            cur.row_factory = self._dataclass_row_factory
-            sql = 'SELECT * FROM player_stats WHERE assists=?'
-            cur.execute(sql, (assists,))
-            return cur.fetchall()
 
 
 ###############################################################################

@@ -1,6 +1,8 @@
 import sqlite3
 from io import StringIO
 
+from nhlpy import NHLClient
+
 from .teams import teams_table
 from .players import players_table
 from .games import games_table
@@ -9,6 +11,9 @@ from .users import users_table
 from .user_picks import user_picks_table
 from .user_stats import user_stats_table
 from .user_matchups import user_matchups_table
+from utils.dataclasses import (
+    Team
+)
 from version import VersionNumber
 
 
@@ -16,7 +21,14 @@ from version import VersionNumber
 
 
 class Database:
-    def __init__(self, version_number: VersionNumber, testing=False):
+    def __init__(
+        self,
+        version_number: VersionNumber,
+        nhl: NHLClient,
+        testing=False
+    ):
+        self.nhl = nhl
+
         results = StringIO() if testing else None
         params = [version_number, testing]
 
@@ -43,20 +55,60 @@ class Database:
         if testing:
             try:
                 self._test(results, version_number)
-            except BaseException as e:
+            except Exception as e:
                 print(results.getvalue())
                 raise e
+        else:
+            self.init()
+            self.populate()
 
 
     #------------------------------------------------------# 
 
 
-    def init_dbs(self, testing=False, results=None):
+    def init(self, testing=False, results=None):
         for table in self.build_sequence:
-            table.init_db()
+            try:
+                table.init_db()
+            except sqlite3.OperationalError as e:
+                error = str(e)
+                if error[-14:] == 'already exists':
+                    continue
+                else:
+                    raise e
             if testing:
                 results.write(f'\n\ninitializing {table._table_name} table')
                 table._test(results)
+
+
+    def populate(self):
+        print('\n\tPOPULATING DATABASE\n')
+
+        print('- Populating Teams Table')
+        self.teams.populate(self.nhl)
+        # for team in self.teams.read_all():
+            # print(team)
+
+        print('- Populating Games Tree')
+        self.games.populate(
+            self.nhl,
+            self.teams,
+            self.player_stats,
+            self.players
+        )
+        # for game in self.games.read_all():
+            # print(game)
+
+        # test_completed = self.nhl.game_center.boxscore(2024020291)
+        # test_future = self.nhl.game_center.boxscore(2024021033)
+        # print(*test_future.items(), sep='\n')
+        # print('\n\n')
+        # print(*test_completed.items(), sep='\n')
+        # print('\n\n')
+        # print(test_future['clock'])
+        # print(test_completed['clock'])
+        # print(test_completed['periodDescriptor'])
+        # print('\n\n')
 
 
     #::::::::::::::::::::::::::::::::::::::::::::::::::::::# 
@@ -77,9 +129,11 @@ class Database:
                         results.write(f'\ntried dropping nonexistent table: test.{error[15:]}')
                         con.rollback()
                         continue
+                    else:
+                        raise e
                 else:
                     results.write(f'\ndropped table: test.{table._table_name}')
-        self.init_dbs(testing=True, results=results)
+        self.init(testing=True, results=results)
         results.write('\n\n')
         print(results.getvalue())
 

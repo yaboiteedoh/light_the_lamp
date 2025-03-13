@@ -12,11 +12,4 @@ from utils.dataclasses import (
 update_install_version()
 version = get_version_number()
 nhl = NHLClient()
-db = Database(version, testing=True)
-
-def main():
-    for team in nhl.teams.teams_info():
-        pass
-
-if __name__ == '__main__':
-    main()
+db = Database(version, nhl, testing=False)
