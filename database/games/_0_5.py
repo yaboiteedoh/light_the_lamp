@@ -108,88 +108,14 @@ class GamesTable(SQLiteTable):
 
 
     def populate(self, nhl, teams, player_stats, players):
-        for team in teams.read_all():
-            schedule = nhl.schedule.get_season_schedule(
-                team_abbr=team.code,
-                season=CURRENT_SEASON
-            )
-            for game in schedule['games']:
-                # print(*game.items(), sep='\n')
-                if game['gameType'] == 1:
-                    continue
-
-                timestamp = datetime.now().timestamp()
-                start_time = datetime.strptime(
-                    game['startTimeUTC'],
-                    '%Y-%m-%dT%H:%M:%SZ'
-                ).timestamp()
-
-                status = 'IMPORTED' if game['gameState'] == 'OFF' else game['gameState']
-
-                if game['awayTeam']['abbrev'] in banned_codes:
-                    continue
-                if game['homeTeam']['abbrev'] in banned_codes:
-                    continue
-                away_team = teams.read_by_code(game['awayTeam']['abbrev'])
-                home_team = teams.read_by_code(game['homeTeam']['abbrev'])
-
-                if away_team is None or home_team is None:
-                    print(game)
-
-                game_data = [
-                    timestamp,
-                    game['id'],
-                    start_time,
-                    status,
-                    home_team.rowid,
-                    away_team.rowid,
-                ]
-                game_obj = Game(*game_data)
-
-                res = self.read_by_nhlid(game_obj.nhlid)
-                if res is not None:
-                    if res.status == 'COMPILED':
-                        continue
-
-                    game_obj.rowid = res.rowid
-                    self.update_status(game_obj)
-                    continue
-
-                self.add(game_obj)
-
-            else:
-                print(f'-- Imported {CURRENT_SEASON} {team.name} games')
-
-        games = self.read_by_status('IMPORTED')
-        if games == []:
-            print('No Games to Update')
-            return
-        all_games = self.read_all()
-        for i, game in enumerate(games):
-            home_team = teams.read_by_rowid(game.home_team_rowid)
-            away_team = teams.read_by_rowid(game.away_team_rowid)
-            print(f'-- Compiling boxscore data for Game {i + 1}/{len(games)}/{len(all_games)}')
-            boxscore = nhl.game_center.boxscore(game.nhlid)
-            stats = boxscore['playerByGameStats']
-            self.update_score(game, nhl, boxscore)
-            game = self.read_by_rowid(game.rowid)
-            print(f'--- {away_team.code} ({game.away_team_points}) @ {home_team.code} ({game.home_team_points})')
-            for team, roster in stats.items():
-                db_team = teams.read_by_code(boxscore[team]['abbrev'])
-                for position, skater_list in roster.items():
-                    if position == 'goalies':
-                        continue
-                    for skater in skater_list:
-                        player_stats.update_by_game(
-                            boxscore,
-                            skater,
-                            db_team.rowid,
-                            game.rowid
-                        )
-                        players.update_by_game(game, skater, team)
-     
-            game.status = 'COMPILED'
-            self.update_status(game)
+        self._update_games(nhl, teams)
+        self._compile_games_by_status(
+            'IMPORTED',
+            nhl,
+            teams,
+            player_stats,
+            players
+        )
 
 
     #------------------------------------------------------# 
@@ -309,6 +235,105 @@ class GamesTable(SQLiteTable):
             cur.execute(sql, (game.status, game.rowid))
             con.commit()
         
+
+###############################################################################
+
+
+    def _update_games(self, nhl, teams):
+        for team in teams.read_all():
+            schedule = nhl.schedule.get_season_schedule(
+                team_abbr=team.code,
+                season=CURRENT_SEASON
+            )
+            for game in schedule['games']:
+                # print(*game.items(), sep='\n')
+                if game['gameType'] == 1:
+                    continue
+
+                timestamp = datetime.now().timestamp()
+                start_time = datetime.strptime(
+                    game['startTimeUTC'],
+                    '%Y-%m-%dT%H:%M:%SZ'
+                ).timestamp()
+
+                status = 'IMPORTED' if game['gameState'] == 'OFF' else game['gameState']
+
+                if game['awayTeam']['abbrev'] in banned_codes:
+                    continue
+                if game['homeTeam']['abbrev'] in banned_codes:
+                    continue
+                away_team = teams.read_by_code(game['awayTeam']['abbrev'])
+                home_team = teams.read_by_code(game['homeTeam']['abbrev'])
+
+                if away_team is None or home_team is None:
+                    print(game)
+
+                game_data = [
+                    timestamp,
+                    game['id'],
+                    start_time,
+                    status,
+                    home_team.rowid,
+                    away_team.rowid,
+                ]
+                game_obj = Game(*game_data)
+
+                res = self.read_by_nhlid(game_obj.nhlid)
+                if res is not None:
+                    if res.status == 'COMPILED':
+                        continue
+
+                    game_obj.rowid = res.rowid
+                    self.update_status(game_obj)
+                    continue
+
+                self.add(game_obj)
+
+            else:
+                print(f'-- Imported {CURRENT_SEASON} {team.name} games')
+
+
+    def _compile_games_by_status(self, query_status, nhl, teams, player_stats, players):
+        match query_status:
+            case 'IMPORTED':
+                games = self.read_by_status(query_status)
+                if games == []:
+                    print('No Games to Update')
+                    return
+                all_games = self.read_all()
+
+                for i, game in enumerate(games):
+                    home_team = teams.read_by_rowid(game.home_team_rowid)
+                    away_team = teams.read_by_rowid(game.away_team_rowid)
+
+                    print(f'-- Compiling boxscore data for Game {i + 1}/{len(games)}/{len(all_games)}')
+                    boxscore = nhl.game_center.boxscore(game.nhlid)
+                    stats = boxscore['playerByGameStats']
+                    self.update_score(game, nhl, boxscore)
+
+                    game = self.read_by_rowid(game.rowid)
+                    print(f'--- {away_team.code} ({game.away_team_points}) @ {home_team.code} ({game.home_team_points})')
+
+                    for team, roster in stats.items():
+                        db_team = teams.read_by_code(boxscore[team]['abbrev'])
+                        for position, skater_list in roster.items():
+                            if position == 'goalies':
+                                continue
+
+                            for skater in skater_list:
+                                player_stats.update_by_game(
+                                    boxscore,
+                                    skater,
+                                    db_team.rowid,
+                                    game.rowid
+                                )
+                                players.update_by_game(game, skater, team)
+
+                    game.status = 'COMPILED'
+                    self.update_status(game)
+
+            case _:
+                raise NotImplementedError
 
 
 ###############################################################################

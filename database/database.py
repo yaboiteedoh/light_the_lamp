@@ -61,7 +61,7 @@ class Database:
                 raise e
         else:
             self.init()
-            self.populate()
+            # self.populate()
 
 
     #------------------------------------------------------# 
@@ -95,19 +95,20 @@ class Database:
             self.player_stats,
             self.players
         )
-        # completed game
-        test_completed = self.nhl.game_center.boxscore(2024020291)
-        # live game
-        test_future = self.nhl.game_center.boxscore(2024021042)
-        print(*test_future.items(), sep='\n')
-        print('\n\n')
-        print(*test_completed.items(), sep='\n')
-        print('\n\n')
 
-        print(test_future['clock'])
-        print(test_completed['clock'])
-        print(test_completed['periodDescriptor'])
-        print('\n\n')
+        # completed game
+        # test_completed = self.nhl.game_center.boxscore(2024020291)
+        # live game
+        # test_future = self.nhl.game_center.boxscore(2024021042)
+        # print(*test_future.items(), sep='\n')
+        # print('\n\n')
+        # print(*test_completed.items(), sep='\n')
+        # print('\n\n')
+
+        # print(test_future['clock'])
+        # print(test_completed['clock'])
+        # print(test_completed['periodDescriptor'])
+        # print('\n\n')
 
 
     def get_join_players(self, player_rowid=None, team_rowid=None):

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+
+<html lang="en", xmlns:og"http://opengraphprotocol.org/schema/">
+    <head>
+        <meta charset="utf-8" />
+        <table>
+            <tr align='center'>
+                <th>GAME ID</th>
+                <th>STATUS</th>
+                <th>HOME TEAM (POINTS)</th>
+                <th>AWAY TEAM (POINTS)</th>
+                <th>WINNER</th>
+            </tr>
+{% for game in games %}
+            <tr align='center'>
+                <td>{{ game[0] }}</td>
+                <td>{{ game[1] }}</td>
+                <td>{{ game[2] }} ({{ game[3] }})</td>
+                <td>{{ game[4] }} ({{ game[5] }})</td>
+                <td>{{ game[2] if game[3] > game[5] else game[4] }}</td>
+            </tr>
+{% endfor %}
+        </table>
+    </head>
+</html>

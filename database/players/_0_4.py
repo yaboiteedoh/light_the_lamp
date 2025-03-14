@@ -115,7 +115,9 @@ class PlayersTable(SQLiteTable):
 
 
     def update_by_game(self, game, skater, team):
-        team_rowid = game.away_team_rowid if team == 'awayTeam' else game.home_team_rowid
+        team_rowid = \
+            game.away_team_rowid if team == 'awayTeam'\
+            else game.home_team_rowid
         player_data = [
             skater['playerId'],
             team_rowid,
