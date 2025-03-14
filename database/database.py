@@ -11,6 +11,7 @@ from .users import users_table
 from .user_picks import user_picks_table
 from .user_stats import user_stats_table
 from .user_matchups import user_matchups_table
+
 from utils.dataclasses import (
     Team
 )
@@ -104,6 +105,7 @@ class Database:
         # print(test_completed['clock'])
         # print(test_completed['periodDescriptor'])
         # print('\n\n')
+        self.get_join_player_stats(game_rowid=378)
 
 
     def get_join_players(self, player_rowid=None, team_rowid=None):
