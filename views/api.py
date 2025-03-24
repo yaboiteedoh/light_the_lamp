@@ -123,7 +123,7 @@ class API:
         for status in ['FINAL', 'IMPORTED']:
             self.db.update_games_by_status(status)
 
-        if 'htmx' in request.args.keys():
+        if 'footer' in request.args.keys():
             return render_template(
                 'tools/sync_object.html',
                 refresh=5 if live else 20,
