@@ -1,5 +1,19 @@
-from flask import render_template
+from datetime import datetime
+from io import StringIO
 
+import pytz
+from flask import render_template, request
+from flask_htmx import HTMX
+
+
+###############################################################################
+
+
+format = '%m/%d/%y @ %I:%M:%S %p'
+tz = pytz.timezone('America/Detroit')
+
+
+###############################################################################
 
 
 class Public:
@@ -7,22 +21,24 @@ class Public:
         self.app = app
         self.db = db
 
-    
+
     def home(self):
-        games = []
-
-        for team in self.db.teams.read_all():
-            games += self.db.get_join_games(team_rowid=team.rowid)
-
         return render_template(
-            "home.html",
-            games=games
+            'home.html'
         )
 
-    
-    def sync(self):
-        self.db.populate()
-        return self.home()
+###############################################################################
 
 
+def now():
+    return datetime.now(tz).strftime(format)
 
+
+def process_args(request):
+    query_string = '?'
+    for key, value in request.args.items():
+        query_string += f'{key}={value}&'
+    return query_string[:-1]
+
+
+###############################################################################

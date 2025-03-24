@@ -30,3 +30,4 @@
 {'version': '0.6.7', 'hash': '37a93338ea8ea8654741293f394163f1c4e27c6', 'message': 'built out the join selector functions on the database object -I should probably make this another module and figure out how to integrate it into the test script and generator'}
 {'version': '0.6.8', 'hash': 'd14b64dae02e9e63465d41fa9e7156b56d356a1', 'message': 'built out the join selector functions on the database object -I should probably make this another module and figure out how to integrate it into the test script and generator'}
 {'version': '0.6.9', 'hash': 'c9c54e21d06aed11bf1e2d76bbd145867bdc7df', 'message': 'Fixed player stats import error'}
+{'version': '0.7.0', 'hash': '7809f2e8277f91ae559d379bb25058825c0a88b', 'message': 'Got Flask hooked in with a basic home endpoint that returns a table containing joined game objects for every game detected, as well as a sync endpoint that updates the database with current data'}

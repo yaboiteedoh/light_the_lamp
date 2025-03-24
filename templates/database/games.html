@@ -1,0 +1,39 @@
+<table
+    class='database games'
+    hx-get='/database/games{{ query_string }}'
+    hx-trigger='every 2s'
+    hx-swap='outerHTML'
+>
+    <tr>
+        <th>START TIME</th>
+        <th>STATUS</th>
+        <th>AWAY TEAM</th>
+        <th>HOME TEAM</th>
+        <th>WINNER</th>
+    </tr>
+{% for game in games %}
+    <tr align='center'>
+{% if game.status == 'COMPILED' or game.status == 'FINAL' or game.status == 'LIVE' %}
+        <td>{{ game.local_start_time }}</td>
+        <td>
+            <button
+                hx-get='/database/stats?game={{ game.rowid }}'
+                hx-trigger='click'
+                hx-swap='outerHTML'
+                hx-target='.stats'
+            >{{ game.status }}</button>
+        </td>
+        <td>{{ game.at_code }} {{ game.at_points }}</td>
+        <td>{{ game.ht_points }} {{ game.ht_code }}</td>
+{% if game.status == 'COMPILED' or game.status == 'FINAL' %}
+        <td>{{ game.winner }}</td>
+{% endif %}
+{% else %}
+        <td>{{ game.local_start_time }}</td>
+        <td>{{ game.status }}</td>
+        <td>{{ game.at_code }}</td>
+        <td>{{ game.ht_code }}</td>
+{% endif %}
+    </tr>
+{% endfor %}
+</table>

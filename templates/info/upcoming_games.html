@@ -1,0 +1,13 @@
+<section 
+    class='info upcoming_games'
+    hx-get='/info/upcoming_games'
+    hx-trigger='every 600s'
+    hx-swap='outerHTML'
+>
+    <p>NEXT GAMES: {{ start_time }} </p>
+    <ul>
+{% for game in upcoming_games %}
+        <li>{{ game.at_code }} @ {{ game.ht_code }}</li>
+{% endfor %}
+    </ul>
+</section>

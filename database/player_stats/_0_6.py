@@ -86,6 +86,7 @@ class PlayerStatsTable(SQLiteTable):
                     game_rowid INTEGER NOT NULL,
                     player_nhlid INTEGER NOT NULL,
                     team_rowid INTEGER NOT NULL,
+                    opp_rowid INTEGER NOT NULL,
                     goals INTEGER NOT NULL,
                     assists INTEGER NOT NULL,
                     hits INTEGER NOT NULL,
@@ -99,16 +100,19 @@ class PlayerStatsTable(SQLiteTable):
                         REFERENCES games(rowid)
                     FOREIGN KEY(team_rowid)
                         REFERENCES teams(rowid)
+                    FOREIGN KEY(opp_rowid)
+                        REFERENCES teams(rowid)
                 )
             '''
             cur.execute(sql)
 
 
-    def update_by_game(self, boxscore, skater, team_rowid, game_rowid):
+    def update_by_game(self, boxscore, skater, team_rowid, opp_rowid, game_rowid):
         player_stat_data = [
             game_rowid,
             skater['playerId'],
             team_rowid,
+            opp_rowid,
             skater['goals'],
             skater['assists'],
             skater['hits'],
@@ -117,7 +121,7 @@ class PlayerStatsTable(SQLiteTable):
         ]
         res = self.read_by_player_and_game_rowids(
             skater['playerId'],
-            boxscore['id']
+            game_rowid
         )
         if res is not None:
             player_stat_data.append(res.rowid)
@@ -137,6 +141,7 @@ class PlayerStatsTable(SQLiteTable):
                     game_rowid,
                     player_nhlid,
                     team_rowid,
+                    opp_rowid,
                     goals,
                     assists,
                     hits,
@@ -147,6 +152,7 @@ class PlayerStatsTable(SQLiteTable):
                     :game_rowid,
                     :player_nhlid,
                     :team_rowid,
+                    :opp_rowid,
                     :goals,
                     :assists,
                     :hits,

@@ -1,5 +1,6 @@
 import sqlite3
 from io import StringIO
+from time import time
 
 from nhlpy import NHLClient
 
@@ -13,7 +14,8 @@ from .user_stats import user_stats_table
 from .user_matchups import user_matchups_table
 
 from utils.dataclasses import (
-    Team
+    JoinGame,
+    JoinPlayerStats
 )
 from version import VersionNumber
 
@@ -26,7 +28,7 @@ class Database:
         self,
         version_number: VersionNumber,
         nhl: NHLClient,
-        testing=False
+        testing=False,
     ):
         self.nhl = nhl
 
@@ -90,6 +92,7 @@ class Database:
 
         print('- Populating Games Tree')
         self.games.populate(
+            'IMPORTED',
             self.nhl,
             self.teams,
             self.player_stats,
@@ -109,6 +112,30 @@ class Database:
         # print(test_completed['clock'])
         # print(test_completed['periodDescriptor'])
         # print('\n\n')
+
+
+    def update_game_states(self):
+        games = self.games.read_by_status('FUT')
+
+        for game in games:
+            if not game.is_after(time()):
+                game.status = 'LIVE'
+                self.games.update_status(game)
+
+        if live := self.games.read_by_status('LIVE') != []:
+            self.update_games_by_status('LIVE')
+
+        return live
+
+
+    def update_games_by_status(self, status):
+        self.games._compile_games_by_status(
+            status,
+            self.nhl,
+            self.teams,
+            self.player_stats,
+            self.players
+        )
 
 
     def get_join_players(self, player_rowid=None, team_rowid=None):
@@ -152,14 +179,16 @@ class Database:
         ):
         with sqlite3.connect(self.games.db_dir) as con:
             cur = con.cursor()
+            cur.row_factory = self._join_game_row_factory
             sql = '''
                 SELECT 
                     g.rowid,
                     g.status,
-                    ht.code,
-                    g.home_team_points,
-                    at.code,
-                    g.away_team_points
+                    ht.code as ht_code,
+                    g.home_team_points as ht_points,
+                    at.code as at_code,
+                    g.away_team_points as at_points,
+                    g.start_time
                 FROM games as g
                 INNER JOIN teams as ht ON g.home_team_rowid = ht.rowid
                 INNER JOIN teams as at ON g.away_team_rowid = at.rowid
@@ -207,13 +236,16 @@ class Database:
     ):
         with sqlite3.connect(self.player_stats.db_dir) as con:
             cur = con.cursor()
+            cur.row_factory = self._join_player_stats_row_factory
             sql = '''
                 SELECT
-                    g.rowid,
-                    p.nhlid,
-                    t.code,
-                    p.position,
-                    p.name,
+                    g.rowid as game_rowid,
+                    g.start_time as game_start_time,
+                    p.nhlid as player_nhlid,
+                    t.code as team_code,
+                    ot.code as opp_code,
+                    p.position as player_position,
+                    p.name as player_name,
                     s.goals,
                     s.assists,
                     s.hits,
@@ -222,6 +254,7 @@ class Database:
                 FROM player_stats as s
                 INNER JOIN games as g ON s.game_rowid = g.rowid
                 INNER JOIN teams as t ON s.team_rowid = t.rowid
+                INNER JOIN teams as ot ON s.opp_rowid = ot.rowid
                 INNER JOIN players as p ON s.player_nhlid = p.nhlid
             '''
             cur.execute(sql)
@@ -236,32 +269,32 @@ class Database:
                     return cur.fetchall()
 
                 case (False, True, True):
-                    sql += '\tWHERE g.rowid = ?'
+                    sql += '\tWHERE game_rowid = ?'
                     cur.execute(sql, (game_rowid,))
                     return cur.fetchall()
 
                 case (True, True, False):
-                    sql += '\tWHERE t.rowid = ?'
+                    sql += '\tWHERE team_code = ?'
                     cur.execute(sql, (team_rowid,))
                     return cur.fetchall()
 
                 case (True, False, True):
-                    sql += '\tWHERE p.nhlid = ?'
+                    sql += '\tWHERE player_nhlid = ?'
                     cur.execute(sql, (player_nhlid,))
                     return cur.fetchall()
 
                 case (True, False, False):
-                    sql += '\tWHERE t.rowid = ? AND p.nhlid = ?'
-                    cur.execute(sql, (team_rowid, player_nhlid))
+                    sql += '\tWHERE team_code = ? AND player_nhlid = ?'
+                    cur.execute(sql, (team_code, player_nhlid))
                     return cur.fetchall()
 
                 case (False, True, False):
-                    sql += '\tWHERE g.rowid = ? AND t.rowid = ?'
-                    cur.execute(sql, (game_rowid, team_rowid))
+                    sql += '\tWHERE game_rowid = ? AND team_code = ?'
+                    cur.execute(sql, (game_rowid, team_code))
                     return cur.fetchall()
 
                 case (False, False, True) | (False, False, False):
-                    sql += '\tWHERE g.rowid = ? AND p.nhlid = ?'
+                    sql += '\tWHERE game_rowid = ? AND player_nhlid = ?'
                     cur.execute(sql, (game_rowid, player_nhlid))
                     return cur.fetchone()
 
@@ -292,6 +325,17 @@ class Database:
         results.write('\n\n')
         print(results.getvalue())
 
+
+    def _join_game_row_factory(self, cur, row):
+        fields = [column[0] for column in cur.description]
+        as_dict = {key: value for key, value in zip(fields, row)}
+        return JoinGame(**as_dict)
+
+    
+    def _join_player_stats_row_factory(self, cur, row):
+        fields = [column[0] for column in cur.description]
+        as_dict = {key: value for key, value in zip(fields, row)}
+        return JoinPlayerStats(**as_dict)
 
 
 ###############################################################################

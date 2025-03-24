@@ -1,0 +1,8 @@
+<footer
+    class='tools sync_object'
+    hx-get='/api/sync?htmx=True'
+    hx-trigger='every {{ refresh }}s'
+    hx-swap='outerHTML'
+>
+    <p>last updated: {{ timestamp }}</p>
+</footer>

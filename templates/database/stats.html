@@ -1,0 +1,38 @@
+<table
+    class='database stats'
+    hx-get='/database/stats{{ query_string }}'
+    hx-trigger='every 2s'
+    hx-swap='outerHTML'
+>
+    <tr align='center'>
+        <th>TEAM</th>
+        <th>OPPONENT</th>
+        <th>POSITION</th>
+        <th>NAME</th>
+        <th>GOALS</th>
+        <th>ASSISTS</th>
+        <th>HITS</th>
+        <th>BLOCKED SHOTS</th>
+        <th>SHOTS ON GOAL</th>
+    </tr>
+{% for stat in stats %}
+    <tr align='center'>
+        <td>{{ stat.team_code }}</td>
+        <td>{{ stat.opp_code }}</td>
+        <td>{{ stat.player_position }}</td>
+        <td>
+            <button 
+                hx-get='/database/stats?player={{ stat.player_nhlid }}'
+                hx-trigger='click'
+                hx-swap='outerHTML'
+                hx-target='.stats'
+            >{{ stat.player_name }}</button>
+        </td>
+        <td>{{ stat.goals }}</td>
+        <td>{{ stat.assists }}</td>
+        <td>{{ stat.hits }}</td>
+        <td>{{ stat.blocked_shots }}</td>
+        <td>{{ stat.shots_on_goal }}</td>
+    </tr>
+{% endfor %}
+</table>
